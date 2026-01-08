@@ -6,3 +6,7 @@
 	path = incl-generic-interface
 	url = git@github.com:annab101/INCLanna.git
 	branch = GenericInterfaceV3
+[submodule "nuwro-generic-interface"]
+	path = nuwro-generic-interface
+	url = git@github.com:NuWro/nuwro.git
+	branch = master
