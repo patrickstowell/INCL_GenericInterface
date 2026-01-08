@@ -2,3 +2,7 @@
 	path = neut-generic-interface
 	url = git@github.com:neut-devel/neut.git
 	branch = feature/incl_generic_interface
+[submodule "incl-generic-interface"]
+	path = incl-generic-interface
+	url = git@github.com:annab101/INCLanna.git
+	branch = GenericInterfaceV3
