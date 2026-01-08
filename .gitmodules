@@ -1,0 +1,4 @@
+[submodule "neut-generic-interface"]
+	path = neut-generic-interface
+	url = git@github.com:neut-devel/neut.git
+	branch = feature/incl_generic_interface
