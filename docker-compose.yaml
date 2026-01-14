@@ -4,12 +4,11 @@ services:
     restart: always
     image: picker24/pittpaccbox:latest
     container_name: incldev2
-    entrypoint: "bash -c 'jupyter lab --allow-root'"
+    entrypoint: "bash -c 'jupyter lab --allow-root --ip 0.0.0.0 --port 8893 --no-browser'"
     working_dir: "/software/"
-    network_mode: "host"   
     environment:
       JUPYTER_TOKEN: "inclnotebook"
-      JUPYTER_IP: "127.0.0.1"
+      JUPYTER_IP: "0.0.0.0"
       JUPYTER_PORT: "8893"
       JUPYTER_ALLOW_REMOTE_ACCESS: "True"
     volumes:
