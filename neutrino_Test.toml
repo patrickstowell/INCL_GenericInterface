@@ -1,6 +1,6 @@
 [neut]
 
-number_of_events = 10000 # the number of probe interactions to simulate
+number_of_events = 100000 # the number of probe interactions to simulate
 
 # cross_section_table_path = "../data" # this can be used to override $NEUT_CRSPATH
 
@@ -53,13 +53,13 @@ direction_type = "z" # probe approaches target along [0.0, 0.0, 1.0]
 #energy_range_mev = [200.0, 1000.0] 
 #
 energy_spectrum_type = "root"
-energy_histogram = [ "/path/to/longlonglong/directory/name/with/longlonglonglonglonglonglonglonglong/root/file/name.root", "myhist", "mev"]
+energy_histogram = [ "/software/t2kflux_2016_plus250kA.root", "enu_nd280_numu", "gev"]
 
 [neut.target]
 
 # example for H20, two free protons and an oxygen nuclei.
-num_nucleons = 40
-num_bound_protons = 18
+num_nucleons = 12
+num_bound_protons = 6
 num_free_protons = 0
 
 [neut.target.hadron_rescattering]
@@ -117,7 +117,8 @@ fermi_motion = "on"
 pauli_blocking = "on"
 # N.B. this isn't really equivalent to turning off PB as the input HTs already have PB included
 pauli_blocking_2p2h = "on"
-pauli_blocking_fsi = "hybrid"
+
+pauli_blocking_fsi = "on"
 
 nucleon_absorption_and_pion_ejection = "on"
 deexcitation = "o16_deexcitation"
@@ -282,10 +283,10 @@ q3_dependent_eb = { enabled = "off", gradient = 0, intercept = 0 }
 #model = "nieves" # use SF model by ueno-mori for NC (unrecommend)
 #model = "nieves_furmanski_abe" # use SF model by frumanski-abe for NC
 model = "rome" # Benhar SF
-# model = "llewelyn-smith"
+#model = "llewelyn-smith"
 #model = "rmf"
 
-erpa = "off" # incompatible with model = "nieves", use nieves.rpa = "on" instead
+#erpa = "on" # incompatible with model = "nieves", use nieves.rpa = "on" instead
 
 kappa = 1.0
 
@@ -324,16 +325,18 @@ separation_energy_negative_behavior = "pin_to_0"
 NN_pair_fraction = 0.05
 
 # Defaults for spectral function model for SRC definition (MeV)
-maximum_energy = 100
-maximum_momentum = 300
+maximum_energy = 1000000000
+maximum_momentum = 300000000000
 
 # Default value is 0, there are tables for -0.08 so it will work as well
 strange_axial_coupling = 0.0
+sf_C12_table="2024"
+sf_neutron_energy_core="on"
 
 [neut.interaction_model.QE.nieves]
 
 nuclear_model = "lfg"
-rpa = "on"
+rpa = "off"
 
 rpa_parameters.fp0in = 0.33
 rpa_parameters.fp0ex = 0.45
@@ -352,13 +355,13 @@ binding_energy_shift = "on"
 
 [neut.interaction_model.QE.vector_form_factors]
 
-# cc_form = "dipole"
+ #cc_form = "dipole"
 cc_form = "BBBA05"
 # cc_form = "BBBA07"
 
 # "scaling": scale cross section to CCQE. Unrecommended.
 # nc_form = "scale"
-# nc_form = "dipole"
+#nc_form = "dipole"
 nc_form = "BBBA05"
 
 # this might be used for seconf-class form factor.
@@ -375,7 +378,7 @@ form = "dipole"
 
 [neut.interaction_model.QE.axial_form_factors.dipole]
 
-axial_mass = 1.21
+axial_mass = 1.03
 nc_axial_mass = 1.21
 
 [neut.interaction_model.QE.axial_form_factors.n_component]
@@ -501,7 +504,7 @@ seaqbar_factor = 1
 rlong_variation = 0
 
 [neut.interaction_model.CASCADE]
-model =  "incl_placeholder" # options are "none",""default", "incl_placeholder"
+model = "incl_placeholder" # options are "none",""default", "incl_placeholder"
 
 [neut.interaction_model.tauola]
 decay_mode = "all"

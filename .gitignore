@@ -1,3 +1,8 @@
 incl-build
 neut-build
 .ipynb_checkpoints
+*.txt
+./Pre*
+./pre*
+*.root
+*.png
