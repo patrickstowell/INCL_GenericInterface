@@ -1,6 +1,6 @@
 [neut]
 
-number_of_events = 100000 # the number of probe interactions to simulate
+number_of_events = 20000 # the number of probe interactions to simulate
 
 # cross_section_table_path = "../data" # this can be used to override $NEUT_CRSPATH
 
@@ -133,10 +133,10 @@ formation_zone_scat_parameter = 0.08
 
 #mode_choice_type = "normal" # choose according to nominal cross-section prediction
 # mode_choice_type = "rescaled" # read mode rescalings from neut.interaction_model.mode_rescaling table
- mode_choice_type = "single" # set a single NEUT mode to simulate with "mode"
+mode_choice_type = "single" # set a single NEUT mode to simulate with "mode"
 
 mode = "CC_QE_nu"
-# mode = "CC_2p2h_nu"
+#mode = "CC_2p2h_nu"
 # mode = "CC_RES_ppi+_nu"
 # mode = "CC_RES_ppi0_nu"
 # mode = "CC_RES_npi+_nu"
@@ -325,13 +325,18 @@ separation_energy_negative_behavior = "pin_to_0"
 NN_pair_fraction = 0.05
 
 # Defaults for spectral function model for SRC definition (MeV)
-maximum_energy = 1000000000
-maximum_momentum = 300000000000
+maximum_energy = 10000000000
+maximum_momentum = 30000000000000
 
 # Default value is 0, there are tables for -0.08 so it will work as well
 strange_axial_coupling = 0.0
+
+
 sf_C12_table="2024"
 sf_neutron_energy_core="on"
+
+src_nuwro_like = "on"
+
 
 [neut.interaction_model.QE.nieves]
 
@@ -389,26 +394,6 @@ alpha = 0.23
 beta = 1.22
 gamma = 0.44
 theta = -0.26
-
-[neut.interaction_model.QE.axial_form_factors.z_expansion]
-# Z-expansion TN 315 p 21 <3GeV as recommended
-# Use official z-expansion parameters, not Patrick's results
-
-pnt = 8
-q4 = 0
-t0 = -0.280
-tc = 0.1764
-
-a0 = 0.5
-a1 = 2.28
-a2 = 0.26
-a3 = -5.20
-a4 =  2.60
-a5 =  0.5
-a6 =  0.5
-a7 =  0.5
-a8 =  0.5
-a9 =  0.5
 
 [neut.interaction_model.2p2h]
 
@@ -504,7 +489,7 @@ seaqbar_factor = 1
 rlong_variation = 0
 
 [neut.interaction_model.CASCADE]
-model = "incl_placeholder" # options are "none",""default", "incl_placeholder"
+model =  "incl_placeholder" # options are "none",""default", "incl_placeholder"
 
 [neut.interaction_model.tauola]
 decay_mode = "all"

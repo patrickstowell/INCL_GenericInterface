@@ -30,12 +30,16 @@ def main():
     t = f.Get("neuttree")
     i =0
     proton_energies = []
-
+    other_counter = 0
+    src_counter = 0
+    evt_counter = 0
 
     noCascadeFSI_pt = []
     QE_deex_pt = []
     multipleNucleon_noCluster_pt = []
+    multipleNucleon_noCluster_pt_src = []
     nuclearCluster_pt = []
+    nuclearCluster_pt_src = []
     oneProton_pt = []
     protonPion_pt = []
     other_pt = []
@@ -43,7 +47,9 @@ def main():
     noCascadeFSI_at = []
     QE_deex_at = []
     multipleNucleon_noCluster_at = []
+    multipleNucleon_noCluster_at_src = []
     nuclearCluster_at = []
+    nuclearCluster_at_src = []
     oneProton_at = []
     protonPion_at = []
     other_at = []
@@ -51,7 +57,9 @@ def main():
     noCascadeFSI = []
     QE_deex = []
     multipleNucleon_noCluster = []
+    multipleNucleon_noCluster_src = []
     nuclearCluster = []
+    nuclearCluster_src = []
     oneProton = []
     protonPion = []
     other = []
@@ -59,22 +67,42 @@ def main():
     noCascadeFSI_pre = []
     QE_deex_pre = []
     multipleNucleon_noCluster_pre = []
+    multipleNucleon_noCluster_pre_src = []
     nuclearCluster_pre = []
+    nuclearCluster_pre_src = []
     oneProton_pre = []
     protonPion_pre = []
     mu_only = []
     no_protons = []
     other_pre = []
-
-
+    """
     for event in t:
         i+=1
         #print(i)
         nvect = event.vectorbranch
         #nvect_reader(nvect).remnant()
         nvect_class = nvect_reader(nvect)
+        nvect_class.Print()
+        if (nvect_class.src() == True):
+            pass
+            #print("src")
+            #input(" ")
+    """
+   
+    for event in t:
+        i+=1
+        #print(i)
+        nvect = event.vectorbranch
+        #nvect_reader(nvect).remnant()
+        nvect_class = nvect_reader(nvect)
+        nvect_class.Print()
         p_casc_energy,nuclear_remnant, nucleonCounter, clusterCounter, transparentProton, pion, photonCounter,proton,prefsi_proton_mom, deex_event = nvect_class.proton_momentum_per_channel()
-        
+        src = nvect_class.issrc
+        evt_counter +=1
+        if src == True:
+            src_counter +=1 
+            #continue
+
         if proton == True:
             HMP_proton = np.asarray(p_casc_energy).max()
         else: 
@@ -87,8 +115,9 @@ def main():
             continue
 
         DPT, dat = nvect_class.get_deltaPT()
-
+        
         if (transparentProton == True) and (clusterCounter == 0) and (proton == True)  and (pion == False) and (photonCounter == False) and (deex_event == False):
+            nvect_class.Print()
             noCascadeFSI.append(HMP_proton)
             noCascadeFSI_at.append(dat)
             noCascadeFSI_pt.append(DPT)
@@ -104,6 +133,7 @@ def main():
             QE_deex_pre.append(prefsi_proton_mom)
         
         elif (transparentProton == False) and (proton == True) and (clusterCounter == 0) and (nucleonCounter == 1)  and (pion == False):
+            #nvect_class.Print()
             oneProton.append(HMP_proton)
             oneProton_at.append(dat)
             oneProton_pt.append(DPT)
@@ -111,16 +141,28 @@ def main():
         
 
         elif (transparentProton == False) and (proton == True) and (clusterCounter == 0 ) and (nucleonCounter > 1)  and (pion == False):
-            multipleNucleon_noCluster.append(HMP_proton)
-            multipleNucleon_noCluster_at.append(dat)
-            multipleNucleon_noCluster_pt.append(DPT)
-            multipleNucleon_noCluster_pre.append(prefsi_proton_mom)
+            if src == False:
+                multipleNucleon_noCluster.append(HMP_proton)
+                multipleNucleon_noCluster_at.append(dat)
+                multipleNucleon_noCluster_pt.append(DPT)
+                multipleNucleon_noCluster_pre.append(prefsi_proton_mom)
+            elif src == True:
+                multipleNucleon_noCluster_src.append(HMP_proton)
+                multipleNucleon_noCluster_at_src.append(dat)
+                multipleNucleon_noCluster_pt_src.append(DPT)
+                multipleNucleon_noCluster_pre_src.append(prefsi_proton_mom)
         
         elif (transparentProton == False) and (proton == True) and (clusterCounter >= 1) and (nucleonCounter >= 1):
-            nuclearCluster.append(HMP_proton)
-            nuclearCluster_at.append(dat)
-            nuclearCluster_pt.append(DPT)
-            nuclearCluster_pre.append(prefsi_proton_mom)
+            if src == False:
+                nuclearCluster.append(HMP_proton)
+                nuclearCluster_at.append(dat)
+                nuclearCluster_pt.append(DPT)
+                nuclearCluster_pre.append(prefsi_proton_mom)
+            else:
+                nuclearCluster_src.append(HMP_proton)
+                nuclearCluster_at_src.append(dat)
+                nuclearCluster_pt_src.append(DPT)
+                nuclearCluster_pre_src.append(prefsi_proton_mom)
 
 
         elif (transparentProton == False) and (proton == True) and (clusterCounter == 0)  and (pion == True):   
@@ -130,17 +172,19 @@ def main():
             protonPion_pre.append(prefsi_proton_mom)
             
         else:
+            other_counter +=1 
             nvect_class.Print()
-            input(" ")
-            print("transparentProton | proton  | nucleonCounter  | pion |photonCounter")
-            print( transparentProton, " " , proton, " " ,nucleonCounter, " " , pion, " ", photonCounter)
-            input(" ")
+            #input(" ")
+            #print("transparentProton | proton  | nucleonCounter  | pion |photonCounter")
+            #print( transparentProton, " " , proton, " " ,nucleonCounter, " " , pion, " ", photonCounter)
+            #input(" ")
             other.append(HMP_proton)
             other_at.append(dat)
             other_pt.append(DPT)
             other_pre.append(prefsi_proton_mom)
 
-            
+    print("total src events" , src_counter/evt_counter)
+    print("other counter", other_counter)  
     file = ROOT.TFile("proton_channels_{}.root".format(filename_chunk),"RECREATE")
 
     c1 = ROOT.TCanvas("c1", "Proton Momentum Distributions", 800, 600)
@@ -158,14 +202,16 @@ def main():
     pad2.SetTicks(1, 1)
     pad2.Draw()
 
-    n_bins = 50
+    n_bins = 40
     x_min = 0
     x_max = 1500   
 
     h_nucCluster = create_histo("h_nuc", "Nuclear Clusters",       ROOT.kViolet-4, 3001, nuclearCluster,n_bins,x_min,x_max)
+    h_nucCluster_src = create_histo("h_nuc_src", "Nuclear Clusters, SRC",       ROOT.kViolet-1, 3001, nuclearCluster_src,n_bins,x_min,x_max)
     h_noCascade  = create_histo("h_noC", "No Cascade FSI",         ROOT.kOrange-4, 3001, noCascadeFSI,n_bins,x_min,x_max)
     h_QE         = create_histo("h_qe",  "QE Proton + De-ex",      ROOT.kOrange+7, 3001, QE_deex,n_bins,x_min,x_max)
     h_multiNuc   = create_histo("h_mul", "Multiple Nucleons",      ROOT.kRed+2,    3001, multipleNucleon_noCluster,n_bins,x_min,x_max)
+    h_multiNuc_src = create_histo("h_mul_src", "Multiple Nucleons, SRC",      ROOT.kRed,    3001, multipleNucleon_noCluster_src,n_bins,x_min,x_max)
     h_oneProton  = create_histo("h_one", "One Proton",             ROOT.kGreen,  3001, oneProton,n_bins,x_min,x_max)
     h_protonPion = create_histo("h_pion","Proton + Pion",          ROOT.kYellow-9, 3001, protonPion,n_bins,x_min,x_max)
     h_other      = create_histo("h_oth", "Other",                  ROOT.kGray,     3001, other,n_bins,x_min,x_max)
@@ -177,7 +223,9 @@ def main():
     hs.Add(h_other)
     hs.Add(h_oneProton)
     hs.Add(h_multiNuc)
+    hs.Add(h_multiNuc_src)
     hs.Add(h_nucCluster)
+    hs.Add(h_nucCluster_src)
     hs.Add(h_noCascade)
     hs.Add(h_QE)
 
@@ -204,7 +252,9 @@ def main():
     legend.AddEntry(h_noCascade, "no cascade FSI", "f")
     legend.AddEntry(h_QE, "QE proton + de-excitation", "f")
     legend.AddEntry(h_multiNuc, "multiple nucleons", "f")
+    legend.AddEntry(h_multiNuc_src, "multiple nucleons, SRC", "f")
     legend.AddEntry(h_nucCluster, "nuclear clusters", "f")
+    legend.AddEntry(h_nucCluster_src, "nuclear clusters", "f")
     legend.AddEntry(h_oneProton, "one proton", "f")
     legend.AddEntry(h_protonPion, "proton + pion", "f")
     legend.Draw()
@@ -213,9 +263,11 @@ def main():
     pad2.cd() 
 
     h_total = h_nucCluster.Clone("h_total")
+    h_total.Add(h_nucCluster_src)
     h_total.Add(h_noCascade)
     h_total.Add(h_QE)
     h_total.Add(h_multiNuc)
+    h_total.Add(h_multiNuc_src)
     h_total.Add(h_oneProton)
     h_total.Add(h_protonPion)
     h_total.Add(h_other)
@@ -231,10 +283,12 @@ def main():
         h_ratio.SetLineColor(h_in.GetLineColor()) 
         return h_ratio
 
-    r_nuc   = create_ratio(h_nucCluster, h_total)
+    r_nuc   = create_ratio(h_nucCluster, h_total) + create_ratio(h_nucCluster_src, h_total)
+    
     r_noCas = create_ratio(h_noCascade, h_total)
     r_qe    = create_ratio(h_QE, h_total)
-    r_mul   = create_ratio(h_multiNuc, h_total)
+    r_mul   = create_ratio(h_multiNuc, h_total) + create_ratio(h_multiNuc_src, h_total)
+    #r_mul_src   = create_ratio(h_multiNuc_src, h_total)
     r_one   = create_ratio(h_oneProton, h_total)
     r_pion  = create_ratio(h_protonPion, h_total)
 
@@ -255,10 +309,10 @@ def main():
     x_axis.SetTitleSize(0.10)
     x_axis.SetTitleOffset(1.0)
 
-
     r_noCas.Draw("HIST SAME")
     r_qe.Draw("HIST SAME")
     r_mul.Draw("HIST SAME")
+    #r_mul_src.Draw("hist SAME")
     r_one.Draw("HIST SAME")
     r_pion.Draw("HIST SAME")
 
