@@ -10,3 +10,17 @@ neut_merge_test
 *.pdf
 *.pyc
 *.par
+__pycache__
+files_generated_for_iop
+incl_analysis_plots
+neut-merge-test
+MCstudies
+neut_output_files
+nuisance_copmarisons
+Pre_src_fix_code
+pre_src_fix_plots
+proton_channels_rootfiles
+spectral_function_emissdistributions
+neut_src_test
+nuisance-build
+nuwro-build

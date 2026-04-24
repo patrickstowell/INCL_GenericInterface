@@ -97,7 +97,7 @@ def main():
         nvect_class = nvect_reader(nvect)
         nvect_class.Print()
         p_casc_energy,nuclear_remnant, nucleonCounter, clusterCounter, transparentProton, pion, photonCounter,proton,prefsi_proton_mom, deex_event = nvect_class.proton_momentum_per_channel()
-        src = nvect_class.issrc
+        src = False
         evt_counter +=1
         if src == True:
             src_counter +=1 
@@ -185,7 +185,7 @@ def main():
 
     print("total src events" , src_counter/evt_counter)
     print("other counter", other_counter)  
-    file = ROOT.TFile("proton_channels_{}.root".format(filename_chunk),"RECREATE")
+    file = ROOT.TFile("proton_channels_{}_test.root".format(filename_chunk),"RECREATE")
 
     c1 = ROOT.TCanvas("c1", "Proton Momentum Distributions", 800, 600)
     c1.cd() 

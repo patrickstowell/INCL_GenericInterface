@@ -4,6 +4,13 @@ import numpy as np
 ROOT.gSystem.Load("libNEUTROOTClass.so")
 ROOT.gSystem.Load("libNEUTOutput.so")
 ROOT.gSystem.Load("libNEUTReWeight.so")
+from enum import Enum
+
+class EventType(Enum):
+    MF = 0
+    SRC = 1
+    twop2h = 2
+    other = 3
 
 class nvect_reader:
     def __init__(self, nvect_,flavour = 2212):
@@ -12,15 +19,18 @@ class nvect_reader:
         self.novert = self.nvect.NnucFsiVert()
         self.nosteps = self.nvect.NnucFsiStep()
         self.beam_flavour = flavour
-        
-        self.is2p2h = self.twop2h()
         self.isnofsi = True if self.nopart <=5 else False
 
-        if self.isnofsi == True:
-            self.issrc = True if self.nopart == 5 else False
+        self.eventType = self.event_type()
+        
+    def event_type(self):
+        if self.twop2h() == True:
+            return EventType.twop2h
+        elif self.src() == True:
+            return EventType.SRC
         else:
-            self.issrc = self.src()
-
+            return EventType.MF
+        
     def muon_energy(self):
         muon_energy = 0
         for i in range(self.nopart):
@@ -154,24 +164,30 @@ class nvect_reader:
         return p_casc_energy,nuclear_remnant, nucleonCounter, clusterCounter, transparentProton, pion, photonCounter, proton, proton_mom_prefsi,deexcitation_event
 
     def src(self):
-        src_counter = 0
-        proton_mom2 = 0
-        init_proton_mom = 0
-        for i in range(self.nopart):
-            pinfo = self.nvect.PartInfo(i)
-            if pinfo.fPID == abs(2112):
-                if (pinfo.fIsAlive == 0) and (self.nvect.ParentIdx(i)== 0) and (pinfo.fStatus == -1):
-                    init_proton_mom = np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()])
-                    continue
 
-            if pinfo.fPID == abs(2212) or pinfo.fPID == abs(2112):
-                if pinfo.fStatus == 5:
-                    proton_mom2 = np.array([-pinfo.fP.X(),-pinfo.fP.Y(), -pinfo.fP.Z()])
+        if self.isnofsi == True:
+            if self.nopart == 5:
+                return True 
+            else:
+                return False
+        else:
+            src_counter = 0
+            proton_mom2 = 0
+            init_proton_mom = 0
+            for i in range(self.nopart):
+                pinfo = self.nvect.PartInfo(i)
+                if pinfo.fPID == abs(2112):
+                    if (pinfo.fIsAlive == 0) and (self.nvect.ParentIdx(i)== 0) and (pinfo.fStatus == -1):
+                        init_proton_mom = np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()])
+                        continue
 
-                    if np.linalg.norm(init_proton_mom - proton_mom2) < 0.1:
-                        return True
-            
-        return False
+                if pinfo.fPID == abs(2212) or pinfo.fPID == abs(2112):
+                    if pinfo.fStatus == 5:
+                        proton_mom2 = np.array([-pinfo.fP.X(),-pinfo.fP.Y(), -pinfo.fP.Z()])
+
+                        if np.linalg.norm(init_proton_mom - proton_mom2) < 0.1:
+                            return True   
+            return False
     
     def twop2h(self):   
         twop2hcounter = 0
@@ -182,7 +198,7 @@ class nvect_reader:
                      twop2hcounter +=1
         if twop2hcounter > 1:
             return True
-        return False
+        return 0
 
     def missing_E_calc(self):
 
@@ -199,17 +215,12 @@ class nvect_reader:
                 T_had = np.sqrt(np.linalg.norm(np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()]))**2 + 938.00**2) - 938.00
 
         return E_nu - E_lep - T_had
-        
-        
+             
     def neutron_mom(self):
         for i in range(self.nopart):
             pinfo = self.nvect.PartInfo(i)
             if ((pinfo.fPID == abs(2112)) and  (pinfo.fStatus == -1)):
                 return np.linalg.norm(np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()]))
-
-        
-
-
 
     def remnant(self):
         A = 0
@@ -325,7 +336,7 @@ class nvect_reader:
 
     def Print(self):
         print("~~~~~~~~~Particles~~~~~~~") 
-        print("ID | Vertex ID | flag | Parent Particle | particle | mom | mass")
+        print("ID | V. ID  | flag | Parent ID | particle | mom | mass")
         for i in range(self.nopart):
             pinfo = self.nvect.PartInfo(i)
             print(i, " ", pinfo.fIsAlive,"       " , pinfo.fStatus,"  ",self.nvect.ParentIdx(i),"              ", pinfo.fPID, "    ",pinfo.fP.X(), pinfo.fP.Y(), pinfo.fP.Z(), pinfo.fMass)
@@ -336,4 +347,5 @@ class nvect_reader:
     
     def kinetic_energy(self,pinfo):
         return np.sqrt((pinfo.fP.X()**2 + pinfo.fP.Y()**2 +pinfo.fP.Z()**2)+pinfo.fMass**2)-pinfo.fMass
+
 

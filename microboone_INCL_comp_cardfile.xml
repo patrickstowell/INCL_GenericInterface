@@ -1,0 +1,12 @@
+<nuisance>
+<sample name="MicroBooNE_CC1ENp_XSec_1DTrueVisibleEnergy_nu" input="NEUT:out_MicroBOONe_IOPfile_INCL_ABLA_newSF_NEUTSRC_100k.root"/>   
+<sample name="MicroBooNE_CC1Mu2p_XSec_1DDeltaPT_nu" input="NEUT:out_MicroBOONe_IOPfile_INCL_ABLA_newSF_NEUTSRC_100k.root"/>  
+<sample name="MicroBooNE_CC1Mu1p_XSec_1DDeltaAlphaT_nu" input="NEUT:out_MicroBOONe_IOPfile_INCL_ABLA_newSF_NEUTSRC_100k.root"/>
+<sample name="MicroBooNE_CC1Mu1p_XSec_1DDeltaPhiT_nu" input="NEUT:out_MicroBOONe_IOPfile_INCL_ABLA_newSF_NEUTSRC_100k.root"/>
+<sample name="MicroBooNE_CC1Mu1p_XSec_1DECal_nu" input="NEUT:out_MicroBOONe_IOPfile_INCL_ABLA_newSF_NEUTSRC_100k.root"/>
+<sample name="MicroBooNE_CC1Mu2p_XSec_1DOpening_Angle_Protons_Lab_nu" input="NEUT:out_MicroBOONe_IOPfile_INCL_ABLA_newSF_NEUTSRC_100k.root"/>
+
+<config UseSVDInverse="1"/>
+</nuisance>
+
+

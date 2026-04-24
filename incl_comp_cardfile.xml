@@ -1,0 +1,8 @@
+<nuisance>
+  <sample name="MCStudy_CCQE" input="NEUT:out_IOPfile_DEFAULT_CCQEonly_100k.root"/>
+  <sample name="T2K_CC0pinp_STV_XSec_1Ddat_nu" input="NEUT:out_IOPfile_DEFAULT_CCQEonly_100k.root"/>
+  <sample name="T2K_CC0pinp_STV_XSec_1Ddpt_nu" input="NEUT:out_IOPfile_DEFAULT_CCQEonly_100k.root"/>
+  <sample name="T2K_CC0piWithProtons_XSec_2018_multidif_0p_1p_Np"  input="NEUT:out_IOPfile_DEFAULT_CCQEonly_100k.root" />
+  <!-- config UseSVDInverse="1" /-->
+  <config drawopts="MC|DATA|COV|INVCOV|SHAPE" />
+</nuisance>

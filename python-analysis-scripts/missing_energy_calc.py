@@ -1,4 +1,4 @@
-from helpful_functions import *
+from incl_analysis_functions import *
 import numpy as np
 import sys 
 
@@ -25,13 +25,9 @@ for event in t:
     miss_p = nvect_class.neutron_mom()
 
 
-    if nvect_class.issrc:
+    if nvect_class.eventType == EventType.SRC:
         h_src.Fill(miss_p, miss_E)
     else:
-        if miss_p < 150 and miss_E > 50:
-            nvect_class.Print()
-            print(miss_p, miss_E)
-
         h_nonsrc.Fill(miss_p, miss_E)
 
 

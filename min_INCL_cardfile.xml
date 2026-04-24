@@ -1,0 +1,7 @@
+<nuisance>
+<sample name="MINERvA_CC0pinp_STV_XSec_1Dpprot_nu" input="NEUT:out_MINERVA_IOPfile_INCL_noABLA_CCQEonly_100k.root"/>
+<sample name="MINERvA_CC0pinp_STV_XSec_1Ddalphat_nu" input="NEUT:out_MINERVA_IOPfile_INCL_noABLA_CCQEonly_100k.root"/>
+<sample name="MINERvA_CC0pinp_STV_XSec_1Ddpt_nu" input="NEUT:out_MINERVA_IOPfile_INCL_noABLA_CCQEonly_100k.root"/>
+<config UseSVDInverse="1"/>
+</nuisance>
+
