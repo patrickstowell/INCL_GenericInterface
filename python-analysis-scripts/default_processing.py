@@ -31,32 +31,31 @@ def process_events(t):
         "nuclearCluster_pre": [], "oneProton_pre": [], "protonPion_pre": [],
         "mu_only": [], "no_protons": [], "other_pre": [],
 
-        "src_noCascadeFSI_pt": [], "src_qeDeEX_pt": [], "src_twoProton_pt": [],
-        "src_multipleNucleonAndNoFSI_pt": [], "src_multipleNucleons_pt": [],
-        "src_nuclearClustersAndNoFSI_pt": [], "src_nuclearClusters_pt": [],
-        "src_nucleonPion_pt": [], "src_muOnly_pt": [], "src_other_pt": [],
-        "src_noCascadeFSIoneNucleon_pt": [], "src_neutronPion_pt": [], "src_oneProtonAndNoFSI_pt": [],
+        "src_noCascadeFSI_pt": [], "src_qeDeEX_pt": [], "src_elasticProton_pt": [],
+        "src_multipleNucleons_pt": [], "src_nuclearClusters_pt": [],
+        "src_protonPion_pt": [], "src_muOnly_pt": [], "src_other_pt": [],
+        "src_neutronPion_pt": [],
 
-        "src_noCascadeFSI_at": [], "src_qeDeEX_at": [], "src_twoProton_at": [],
-        "src_multipleNucleonAndNoFSI_at": [], "src_multipleNucleons_at": [],
-        "src_nuclearClustersAndNoFSI_at": [], "src_nuclearClusters_at": [],
-        "src_nucleonPion_at": [], "src_muOnly_at": [], "src_other_at": [],
-        "src_noCascadeFSIoneNucleon_at": [], "src_neutronPion_at": [], "src_oneProtonAndNoFSI_at": [],
+        "src_noCascadeFSI_at": [], "src_qeDeEX_at": [], "src_elasticProton_at": [],
+        "src_multipleNucleons_at": [], "src_nuclearClusters_at": [],
+        "src_protonPion_at": [], "src_muOnly_at": [], "src_other_at": [],
+        "src_neutronPion_at": [],
 
-        "src_noCascadeFSI": [], "src_qeDeEX": [], "src_twoProton": [],
-        "src_multipleNucleonAndNoFSI": [], "src_multipleNucleons": [],
-        "src_nuclearClustersAndNoFSI": [], "src_nuclearClusters": [],
-        "src_nucleonPion": [], "src_muOnly": [], "src_other": [],
-        "src_noCascadeFSIoneNucleon": [], "src_neutronPion": [], "src_oneProtonAndNoFSI": [],
+        "src_noCascadeFSI": [], "src_qeDeEX": [], "src_elasticProton": [],
+        "src_multipleNucleons": [], "src_nuclearClusters": [],
+        "src_protonPion": [], "src_muOnly": [], "src_other": [],
+        "src_neutronPion": [], 
 
-        "2p2h_noCascadeFSI": [], "2p2h_qeDeEX": [], "2p2h_twoProton": [],
-        "2p2h_multipleNucleonAndNoFSI": [], "2p2h_multipleNucleons": [],
-        "2p2h_nuclearClustersAndNoFSI": [], "2p2h_nuclearClusters": [],
-        "2p2h_nucleonPion": [], "2p2h_muOnly": [], "2p2h_other": [],
-        "2p2h_noCascadeFSIoneNucleon": [], "2p2h_neutronPion": [], "2p2h_oneProtonAndNoFSI": [],
+        "src_elasticProton_T": [],"src_multipleNucleons_T": [], 
+        "src_nuclearClusters_T": [],  "src_protonPion_T": [],
 
-        "ex_noCascadeFSI": [],"ex_QE_deex": [], "ex_multipleNucleon_noCluster": [],"ex_nuclearCluster": [],
-         "ex_oneProton": [], "ex_protonPion": [],"ex_no_protons": [], "ex_src":[], "ex_2p2h": [],
+        "2p2h_noCascadeFSI": [], "2p2h_qeDeEX": [], "2p2h_elasticProton": [],
+        "2p2h_multipleNucleons": [], "2p2h_nuclearClusters": [],
+        "2p2h_protonPion": [], "2p2h_muOnly": [], "2p2h_other": [],
+        "2p2h_neutronPion": [],
+
+        "ex_mf": [], "ex_noCascadeFSI": [],"ex_QE_deex": [], "ex_multipleNucleon_noCluster": [],"ex_nuclearCluster": [],
+        "ex_oneProton": [], "ex_protonPion": [],"ex_no_protons": [], "ex_src":[], "ex_2p2h": [],
         "ex_other": []
     }
 
@@ -81,6 +80,7 @@ def process_events(t):
 
         if eventType == EventType.MF:
             excitation_E = nvect_class.excitation_E_CCQE()
+            output_dic["ex_mf"].append(excitation_E)
             if (intChannel == intChannel_CCQE.muOnly) or (intChannel == intChannel_CCQE.neutronPion):
                 output_dic["no_protons"].append(prefsi_proton_mom)
                 output_dic["ex_no_protons"].append(excitation_E) 
@@ -108,6 +108,7 @@ def process_events(t):
                 output_dic["ex_QE_deex"].append(excitation_E) # Added
             
             elif intChannel == intChannel_CCQE.oneProton:
+
                 output_dic["oneProton"].append(HMP_proton)
                 output_dic["oneProton_at"].append(dat)
                 output_dic["oneProton_pt"].append(DPT)
@@ -151,10 +152,8 @@ def process_events(t):
                 continue
 
             if nvect_class.HMPMom is None:    
-                nvect_class.Print()
                 continue
 
-            
             HMP_proton = nvect_class.HMPMom 
             DPT = 0 
             dat = 0 
@@ -169,45 +168,39 @@ def process_events(t):
                 output_dic["src_qeDeEX_at"].append(dat)
                 output_dic["src_qeDeEX_pt"].append(DPT)
             
-            elif intChannel == intChannel_CC0pi.twoProton:
-                output_dic["src_twoProton"].append(HMP_proton)
-                output_dic["src_twoProton_at"].append(dat)
-                output_dic["src_twoProton_pt"].append(DPT)
-            
-            elif intChannel == intChannel_CC0pi.multipleNucleonAndNoFSI:
-                output_dic["src_multipleNucleonAndNoFSI"].append(HMP_proton)
-                output_dic["src_multipleNucleonAndNoFSI_at"].append(dat)
-                output_dic["src_multipleNucleonAndNoFSI_pt"].append(DPT)
+            elif intChannel == intChannel_CC0pi.elasticProton:
+                if nvect_class.istransparent == True:
+                    print("here")
+                    output_dic["src_elasticProton_T"].append(HMP_proton)
+                else:
+                    output_dic["src_elasticProton"].append(HMP_proton)
+                    output_dic["src_elasticProton_at"].append(dat)
+                    output_dic["src_elasticProton_pt"].append(DPT)
+
+
        
             elif intChannel == intChannel_CC0pi.multipleNucleons:
-                output_dic["src_multipleNucleons"].append(HMP_proton)
-                output_dic["src_multipleNucleons_at"].append(dat)
-                output_dic["src_multipleNucleons_pt"].append(DPT)
-                
-            elif intChannel == intChannel_CC0pi.nuclearClustersAndNoFSI: 
-                output_dic["src_nuclearClustersAndNoFSI"].append(HMP_proton)
-                output_dic["src_nuclearClustersAndNoFSI_at"].append(dat)
-                output_dic["src_nuclearClustersAndNoFSI_pt"].append(DPT)
-                
+                if nvect_class.istransparent == True:
+                    print("here")
+                    output_dic["src_multipleNucleons_T"].append(HMP_proton)
+                else:
+                    output_dic["src_multipleNucleons"].append(HMP_proton)
+                    output_dic["src_multipleNucleons_at"].append(dat)
+                    output_dic["src_multipleNucleons_pt"].append(DPT)
+                    
             elif intChannel == intChannel_CC0pi.nuclearClusters: 
-                output_dic["src_nuclearClusters"].append(HMP_proton)
-                output_dic["src_nuclearClusters_at"].append(dat)
-                output_dic["src_nuclearClusters_pt"].append(DPT)
+                if nvect_class.istransparent == True:
+                    print("here")
+                    output_dic["src_nuclearClusters_T"].append(HMP_proton)
+                else:
+                    output_dic["src_nuclearClusters"].append(HMP_proton)
+                    output_dic["src_nuclearClusters_at"].append(dat)
+                    output_dic["src_nuclearClusters_pt"].append(DPT)
                 
-            elif intChannel == intChannel_CC0pi.nucleonPion: 
-                output_dic["src_nucleonPion"].append(HMP_proton)
-                output_dic["src_nucleonPion_at"].append(dat)
-                output_dic["src_nucleonPion_pt"].append(DPT)  
-
-            elif intChannel == intChannel_CC0pi.noCascadeFSIoneNucleon: 
-                output_dic["src_noCascadeFSIoneNucleon"].append(HMP_proton)
-                output_dic["src_noCascadeFSIoneNucleon_at"].append(dat)
-                output_dic["src_noCascadeFSIoneNucleon_pt"].append(DPT)
-
-            elif intChannel == intChannel_CC0pi.oneProtonAndNoFSI: 
-                output_dic["src_oneProtonAndNoFSI"].append(HMP_proton)
-                output_dic["src_oneProtonAndNoFSI_at"].append(dat)
-                output_dic["src_oneProtonAndNoFSI_pt"].append(DPT)
+            elif intChannel == intChannel_CC0pi.protonPion: 
+                output_dic["src_protonPion"].append(HMP_proton)
+                output_dic["src_protonPion_at"].append(dat)
+                output_dic["src_protonPion_pt"].append(DPT)  
 
             elif intChannel == intChannel_CCQE.other:
                 other_counter += 1 
@@ -223,10 +216,9 @@ def process_events(t):
                 continue
 
             if nvect_class.HMPMom is None:    
-                nvect_class.Print()
+                #nvect_class.Print()
                 continue
 
-            
             HMP_proton = nvect_class.HMPMom 
             DPT = 0 
             dat = 0 
@@ -237,37 +229,25 @@ def process_events(t):
             elif intChannel == intChannel_CC0pi.qeDeEX:
                 output_dic["2p2h_qeDeEX"].append(HMP_proton)
             
-            elif intChannel == intChannel_CC0pi.twoProton:
-                output_dic["2p2h_twoProton"].append(HMP_proton)
-            
-            elif intChannel == intChannel_CC0pi.multipleNucleonAndNoFSI:
-                output_dic["2p2h_multipleNucleonAndNoFSI"].append(HMP_proton)
+            elif intChannel == intChannel_CC0pi.elasticProton:
+                output_dic["2p2h_elasticProton"].append(HMP_proton)
        
             elif intChannel == intChannel_CC0pi.multipleNucleons:
                 output_dic["2p2h_multipleNucleons"].append(HMP_proton)
                 
-            elif intChannel == intChannel_CC0pi.nuclearClustersAndNoFSI: 
-                output_dic["2p2h_nuclearClustersAndNoFSI"].append(HMP_proton)
-                
             elif intChannel == intChannel_CC0pi.nuclearClusters: 
                 output_dic["2p2h_nuclearClusters"].append(HMP_proton)
                 
-            elif intChannel == intChannel_CC0pi.nucleonPion: 
-                output_dic["2p2h_nucleonPion"].append(HMP_proton)
-
-            elif intChannel == intChannel_CC0pi.noCascadeFSIoneNucleon: 
-                output_dic["2p2h_noCascadeFSIoneNucleon"].append(HMP_proton)
-
-            elif intChannel == intChannel_CC0pi.oneProtonAndNoFSI: 
-                output_dic["2p2h_oneProtonAndNoFSI"].append(HMP_proton)
+            elif intChannel == intChannel_CC0pi.protonPion: 
+                output_dic["2p2h_protonPion"].append(HMP_proton)
 
             elif intChannel == intChannel_CCQE.other:
                 other_counter += 1 
-                nvect_class.Print()
+                #nvect_class.Print()
                 output_dic["2p2h_other"].append(HMP_proton)
         else:
             print("how are we here")
-            nvect_class.Print()
+            #nvect_class.Print()
 
         if eventType == EventType.SRC:
             h_src.Fill(miss_p, miss_E)
@@ -671,36 +651,37 @@ def INCL_processing(filename):
     pad2_c6.SetTicks(1, 1)
     pad2_c6.Draw()
 
-    n_bins = 40
+    n_bins = 20
     x_min = 0
     x_max = 1500   
 
-    # Creating histograms using the new src_ lists
-    h_src_nucCluster           = create_histo("h_src_nuc",          "Nuclear Clusters",             ROOT.kViolet-4, 3001, output_dic["src_nuclearClusters"],         n_bins, x_min, x_max)
-    h_src_nucClusterAndNoFSI   = create_histo("h_src_nuc_noFSI",    "Nuclear Clusters & No FSI",    ROOT.kViolet-6, 3001, output_dic["src_nuclearClustersAndNoFSI"], n_bins, x_min, x_max)
-    h_src_noCascade            = create_histo("h_src_noC",          "No Cascade FSI",               ROOT.kOrange-4, 3001, output_dic["src_noCascadeFSI"],            n_bins, x_min, x_max)
-    h_src_noCascadeOneNucleon  = create_histo("h_src_noC_oneNuc",   "No Cascade FSI (One Nuc)",     ROOT.kCyan,     3001, output_dic["src_noCascadeFSIoneNucleon"],  n_bins, x_min, x_max)
-    h_src_qe                   = create_histo("h_src_qe",           "QE Proton + De-ex",            ROOT.kOrange+7, 3001, output_dic["src_qeDeEX"],                  n_bins, x_min, x_max)
-    h_src_multiNuc             = create_histo("h_src_mul",          "Multiple Nucleons",            ROOT.kRed+2,    3001, output_dic["src_multipleNucleons"],        n_bins, x_min, x_max)
-    h_src_multiNucAndNoFSI     = create_histo("h_src_mul_noFSI",    "Multiple Nucleons & No FSI",   ROOT.kRed-4,    3001, output_dic["src_multipleNucleonAndNoFSI"], n_bins, x_min, x_max)
-    h_src_twoProton            = create_histo("h_src_twoP",         "Two Proton",                   ROOT.kGreen+2,  3001, output_dic["src_twoProton"],               n_bins, x_min, x_max)
-    h_src_oneProtonAndNoFSI    = create_histo("h_src_oneP_noFSI",   "One Proton & No FSI",          ROOT.kGreen,    3001, output_dic["src_oneProtonAndNoFSI"],       n_bins, x_min, x_max)
-    h_src_nucleonPion          = create_histo("h_src_pion",         "Nucleon + Pion",               ROOT.kYellow-9, 3001, output_dic["src_nucleonPion"],             n_bins, x_min, x_max)
-    h_src_other                = create_histo("h_src_oth",          "Other",                        ROOT.kGray,     3001, output_dic["src_other"],                   n_bins, x_min, x_max)
+    # Creating histograms using the updated src_ lists
+    h_src_noCascade    = create_histo("h_src_noC",       "No Cascade FSI",      ROOT.kOrange-4, 3001, output_dic["src_noCascadeFSI"],    n_bins, x_min, x_max)
+    h_src_qe           = create_histo("h_src_qe",        "QE Proton + De-ex",   ROOT.kOrange+7, 3001, output_dic["src_qeDeEX"],          n_bins, x_min, x_max)
+    h_src_elasticProton= create_histo("h_src_elasticP",  "Elastic Proton",      ROOT.kGreen+2,  3001, output_dic["src_elasticProton"],   n_bins, x_min, x_max)
+    h_src_multiNuc     = create_histo("h_src_mul",       "Multiple Nucleons",   ROOT.kRed+2,    3001, output_dic["src_multipleNucleons"],n_bins, x_min, x_max)
+    h_src_nucCluster   = create_histo("h_src_nuc",       "Nuclear Clusters",    ROOT.kViolet-4, 3001, output_dic["src_nuclearClusters"], n_bins, x_min, x_max)
+    h_src_protonPion   = create_histo("h_src_pion",      "Proton + Pion",       ROOT.kYellow-9, 3001, output_dic["src_protonPion"],      n_bins, x_min, x_max)
+    h_src_other        = create_histo("h_src_oth",       "Other",               ROOT.kGray,     3001, output_dic["src_other"],           n_bins, x_min, x_max)
+    
+    h_src_elasticProton_T = create_histo("h_src_elasticP_t",  "Elastic Proton, transparent",      ROOT.kGreen-4,  3001, output_dic["src_elasticProton_T"],   n_bins, x_min, x_max)
+    h_src_multiNuc_T     = create_histo("h_src_mul_T",       "Multiple Nucleons, transparent",   ROOT.kRed-4,    3001, output_dic["src_multipleNucleons_T"],n_bins, x_min, x_max)
+    h_src_nucCluster_T   = create_histo("h_src_nuc_T",       "Nuclear Clusters, transparent",    ROOT.kViolet+4, 3001, output_dic["src_nuclearClusters_T"], n_bins, x_min, x_max)
+   
+
     pad1_c6.cd() 
 
     hs_src = ROOT.THStack("hs_src", "SRC Proton Momentum by Channel;Momentum [MeV/c];Events")
     
     # Adding to stack (bottom to top)
     hs_src.Add(h_src_other)
-    hs_src.Add(h_src_nucleonPion)
-    hs_src.Add(h_src_oneProtonAndNoFSI)
-    hs_src.Add(h_src_twoProton)
-    hs_src.Add(h_src_multiNuc)
-    hs_src.Add(h_src_multiNucAndNoFSI)
+    hs_src.Add(h_src_protonPion)
     hs_src.Add(h_src_nucCluster)
-    hs_src.Add(h_src_nucClusterAndNoFSI)
-    hs_src.Add(h_src_noCascadeOneNucleon)
+    hs_src.Add(h_src_nucCluster_T)
+    hs_src.Add(h_src_multiNuc)
+    hs_src.Add(h_src_multiNuc_T)   
+    hs_src.Add(h_src_elasticProton)
+    hs_src.Add(h_src_elasticProton_T)
     hs_src.Add(h_src_noCascade)
     hs_src.Add(h_src_qe)
 
@@ -718,51 +699,50 @@ def INCL_processing(filename):
     total_integral_src = sum(hist.Integral() for hist in hs_src.GetHists())
     print(f"Total visible events in the SRC stack: {total_integral_src}")
 
-    # Adjusted legend size to accommodate the 11 items
+    # Adjusted legend size
     legend_src = ROOT.TLegend(0.45, 0.45, 0.88, 0.88)
     legend_src.SetBorderSize(0)
     legend_src.SetFillStyle(0) # Transparent
-    legend_src.AddEntry(h_src_qe,                  "QE proton + de-excitation",      "f")
-    legend_src.AddEntry(h_src_noCascade,           "No cascade FSI",                 "f")
-    legend_src.AddEntry(h_src_noCascadeOneNucleon, "No cascade FSI (one nucleon)",   "f")
-    legend_src.AddEntry(h_src_nucClusterAndNoFSI,  "Nuclear clusters & No FSI",      "f")
-    legend_src.AddEntry(h_src_nucCluster,          "Nuclear clusters",               "f")
-    legend_src.AddEntry(h_src_multiNucAndNoFSI,    "Multiple nucleons & No FSI",     "f")
-    legend_src.AddEntry(h_src_multiNuc,            "Multiple nucleons",              "f")
-    legend_src.AddEntry(h_src_twoProton,           "Two proton",                     "f")
-    legend_src.AddEntry(h_src_oneProtonAndNoFSI,   "One proton & No FSI",            "f")
-    legend_src.AddEntry(h_src_nucleonPion,         "Nucleon + pion",                 "f")
-    legend_src.AddEntry(h_src_other,               "Other",                          "f")
+    legend_src.AddEntry(h_src_qe,            "QE proton + de-excitation", "f")
+    legend_src.AddEntry(h_src_noCascade,     "No cascade FSI",            "f")
+    legend_src.AddEntry(h_src_elasticProton, "Elastic proton",            "f")
+    legend_src.AddEntry(h_src_multiNuc,      "Multiple nucleons",         "f")
+    legend_src.AddEntry(h_src_nucCluster,    "Nuclear clusters",          "f")
+    legend_src.AddEntry(h_src_elasticProton_T, "Elastic proton + transparent","f")
+    legend_src.AddEntry(h_src_multiNuc_T,      "Multiple nucleons + transparent", "f")
+    legend_src.AddEntry(h_src_nucCluster_T,    "Nuclear clusters + transparent", "f")
+    legend_src.AddEntry(h_src_protonPion,    "Proton + pion",             "f")
+    legend_src.AddEntry(h_src_other,         "Other",                     "f")
     legend_src.Draw()
 
     pad2_c6.cd() 
 
+    # Create total histogram for ratio calculation
     h_total_src = h_src_nucCluster.Clone("h_total_src")
-    h_total_src.Add(h_src_nucClusterAndNoFSI)
     h_total_src.Add(h_src_noCascade)
-    h_total_src.Add(h_src_noCascadeOneNucleon)
     h_total_src.Add(h_src_qe)
+    h_total_src.Add(h_src_elasticProton)
     h_total_src.Add(h_src_multiNuc)
-    h_total_src.Add(h_src_multiNucAndNoFSI)
-    h_total_src.Add(h_src_twoProton)
-    h_total_src.Add(h_src_oneProtonAndNoFSI)
-    h_total_src.Add(h_src_nucleonPion)
+    h_total_src.Add(h_src_protonPion)
     h_total_src.Add(h_src_other)
-
+    h_total_src.Add(h_src_elasticProton_T)
+    h_total_src.Add(h_src_multiNuc_T)
+    h_total_src.Add(h_src_nucCluster_T)
     
-    r_src_nucCluster          = create_ratio(h_src_nucCluster, h_total_src)
-    r_src_nucClusterAndNoFSI  = create_ratio(h_src_nucClusterAndNoFSI, h_total_src)
-    r_src_noCascade           = create_ratio(h_src_noCascade, h_total_src)
-    r_src_noCascadeOneNucleon = create_ratio(h_src_noCascadeOneNucleon, h_total_src)
-    r_src_qe                  = create_ratio(h_src_qe, h_total_src)
-    r_src_multiNuc            = create_ratio(h_src_multiNuc, h_total_src)
-    r_src_multiNucAndNoFSI    = create_ratio(h_src_multiNucAndNoFSI, h_total_src)
-    r_src_twoProton           = create_ratio(h_src_twoProton, h_total_src)
-    r_src_oneProtonAndNoFSI   = create_ratio(h_src_oneProtonAndNoFSI, h_total_src)
-    r_src_nucleonPion         = create_ratio(h_src_nucleonPion, h_total_src)
-    r_src_other               = create_ratio(h_src_other, h_total_src)
 
-    
+    # Create ratios
+    r_src_noCascade     = create_ratio(h_src_noCascade, h_total_src)
+    r_src_qe            = create_ratio(h_src_qe, h_total_src)
+    r_src_elasticProton = create_ratio(h_src_elasticProton, h_total_src)
+    r_src_multiNuc      = create_ratio(h_src_multiNuc, h_total_src)
+    r_src_nucCluster    = create_ratio(h_src_nucCluster, h_total_src)
+    r_src_protonPion    = create_ratio(h_src_protonPion, h_total_src)
+    r_src_other         = create_ratio(h_src_other, h_total_src)
+    r_src_elasticProton_T = create_ratio(h_src_elasticProton_T, h_total_src)
+    r_src_multiNuc_T      = create_ratio(h_src_multiNuc_T, h_total_src)
+    r_src_nucCluster_T    = create_ratio(h_src_nucCluster_T, h_total_src)
+
+    # Draw ratios
     r_src_noCascade.Draw("HIST") 
     r_src_noCascade.SetTitle(";P_{aft} (MeV/c);Fractional Contributions") 
 
@@ -779,17 +759,17 @@ def INCL_processing(filename):
     x_axis_src.SetTitleOffset(1.0)
 
     # Draw the remaining ratios on top
-    r_src_nucCluster.Draw("HIST SAME")
-    r_src_nucClusterAndNoFSI.Draw("HIST SAME")
-    r_src_noCascadeOneNucleon.Draw("HIST SAME")
     r_src_qe.Draw("HIST SAME")
+    r_src_elasticProton.Draw("HIST SAME")
     r_src_multiNuc.Draw("HIST SAME")
-    r_src_multiNucAndNoFSI.Draw("HIST SAME")
-    r_src_twoProton.Draw("HIST SAME")
-    r_src_oneProtonAndNoFSI.Draw("HIST SAME")
-    r_src_nucleonPion.Draw("HIST SAME")
+    r_src_nucCluster.Draw("HIST SAME")
+    r_src_protonPion.Draw("HIST SAME")
     r_src_other.Draw("HIST SAME")
-    c6.Update()  
+    r_src_elasticProton_T.Draw("HIST SAME")
+    r_src_multiNuc_T.Draw("HIST SAME")
+    r_src_nucCluster_T.Draw("HIST SAME")
+    
+    c6.Update()
 
     c7 = ROOT.TCanvas("c7", "Excitation_energy_distribution_ex", 800, 600)
     c7.cd() 
@@ -811,10 +791,6 @@ def INCL_processing(filename):
     h_ex_oneProton  = create_histo("h_ex_one", "One Proton",             ROOT.kGreen,    3001, output_dic["ex_oneProton"], n_bins, x_min, x_max)
     h_ex_protonPion = create_histo("h_ex_pion","Proton + Pion",          ROOT.kYellow-9, 3001, output_dic["ex_protonPion"], n_bins, x_min, x_max)
     h_ex_other      = create_histo("h_ex_oth", "No protons",             ROOT.kGray,     3001, output_dic["ex_no_protons"], n_bins, x_min, x_max)
-    h_ex_src        = create_histo("h_ex_src", "SRC",                    ROOT.kBlue,     3001, output_dic["ex_src"], n_bins, x_min, x_max)
-    h_ex_2p2h        = create_histo("h_ex_2p2h", "2p2h",                 ROOT.kTeal+3,    3001, output_dic["ex_2p2h"], n_bins, x_min, x_max)
-
-
 
     hs7 = ROOT.THStack("hs7_ExcitationE", "excitationE_distribution_ex")
     hs7.Add(h_ex_protonPion)
@@ -824,8 +800,6 @@ def INCL_processing(filename):
     hs7.Add(h_ex_nucCluster)
     hs7.Add(h_ex_noCascade)
     hs7.Add(h_ex_QE)
-    hs7.Add(h_ex_src)
-    hs7.Add(h_ex_2p2h)
 
     hs7.Draw("hist") 
     hs7.SetTitle("; excitation E [MeV];Number of Events") 
@@ -849,15 +823,59 @@ def INCL_processing(filename):
     legend7.AddEntry(h_ex_oneProton, "one proton", "f")
     legend7.AddEntry(h_ex_protonPion, "proton + pion", "f")
     legend7.AddEntry(h_ex_other, "no protons", "f")
-    legend7.AddEntry(h_ex_src, "src", "f")
-    legend7.AddEntry(h_ex_2p2h, "2p2h", "f")
 
     legend7.Draw()
+
+    c9 = ROOT.TCanvas("c9", "Excitation_energy_distribution_ex", 800, 600)
+    c9.cd() 
+    pad9 = ROOT.TPad("pad7", "pad7", 0, 0.3, 1, 1.0)
+    pad9.SetBottomMargin(0.02) 
+    pad9.SetLeftMargin(0.12)
+    pad9.SetTicks(1, 1)        
+    pad9.Draw()
+
+    n_bins = 150
+    x_min = -50
+    x_max = 60
+
+    # Extracting the lists directly from the dictionary
+    h_ex_MF         = create_histo("h_ex_mf", "Mean Field",             ROOT.kOrange+7, 3001, output_dic["ex_mf"], n_bins, x_min, x_max)
+    h_ex_src        = create_histo("h_ex_src", "SRC",                   ROOT.kBlue,     3001, output_dic["ex_src"], n_bins, x_min, x_max)
+    h_ex_2p2h       = create_histo("h_ex_2p2h", "2p2h",                 ROOT.kTeal+3,    3001, output_dic["ex_2p2h"], n_bins, x_min, x_max)
+
+
+
+    hs9 = ROOT.THStack("hs9_ExcitationE", "excitationE_distribution_ex")
+    hs9.Add(h_ex_MF)
+    hs9.Add(h_ex_src)
+    hs9.Add(h_ex_2p2h)
+
+    hs9.Draw("hist") 
+    hs9.SetTitle("; excitation E [MeV];Number of Events") 
+
+    hs9.GetYaxis().SetLabelSize(0.03)
+    hs9.GetYaxis().SetTitleSize(0.04)
+    hs9.GetYaxis().SetTitleOffset(1.1)
+
+    hs9.GetXaxis().SetTitle("Excitation Energy [MeV]")
+
+    max_h = hs9.GetMaximum()
+    hs9.SetMaximum(max_h * 1.2) 
+
+    legend9 = ROOT.TLegend(0.55, 0.55, 0.88, 0.88)
+    legend9.SetBorderSize(0)
+    legend9.SetFillStyle(0) # Transparent
+    legend9.AddEntry(h_ex_MF, "Mean Field", "f")
+    legend9.AddEntry(h_ex_src, "src", "f")
+    legend9.AddEntry(h_ex_2p2h, "2p2h", "f")
+
+    legend9.Draw()
+
 
     c8 = ROOT.TCanvas("c8", "2p2h Proton Momentum Distributions", 800, 600)
     c8.cd() 
     
-    # Appended _c6 to pad names to avoid overwriting your c1 pads if run in the same script
+    # Appended _c8 to pad names to avoid overwriting your c1 pads if run in the same script
     pad1_c8 = ROOT.TPad("pad1_c8", "pad1", 0, 0.3, 1, 1.0)
     pad1_c8.SetBottomMargin(0.02) 
     pad1_c8.SetLeftMargin(0.12)
@@ -871,36 +889,29 @@ def INCL_processing(filename):
     pad2_c8.SetTicks(1, 1)
     pad2_c8.Draw()
 
-    n_bins = 40
+    n_bins = 20
     x_min = 0
     x_max = 1500   
 
-    # Creating histograms using the new src_ lists
-    h_2p2h_nucCluster           = create_histo("h_2p2h_nuc",          "Nuclear Clusters",             ROOT.kViolet-4, 3001, output_dic["2p2h_nuclearClusters"],         n_bins, x_min, x_max)
-    h_2p2h_nucClusterAndNoFSI   = create_histo("h_2p2h_nuc_noFSI",    "Nuclear Clusters & No FSI",    ROOT.kViolet-6, 3001, output_dic["2p2h_nuclearClustersAndNoFSI"], n_bins, x_min, x_max)
-    h_2p2h_noCascade            = create_histo("h_2p2h_noC",          "No Cascade FSI",               ROOT.kOrange-4, 3001, output_dic["2p2h_noCascadeFSI"],            n_bins, x_min, x_max)
-    h_2p2h_noCascadeOneNucleon  = create_histo("h_2p2h_noC_oneNuc",   "No Cascade FSI (One Nuc)",     ROOT.kCyan,     3001, output_dic["2p2h_noCascadeFSIoneNucleon"],  n_bins, x_min, x_max)
-    h_2p2h_qe                   = create_histo("h_2p2h_qe",           "QE Proton + De-ex",            ROOT.kOrange+7, 3001, output_dic["2p2h_qeDeEX"],                  n_bins, x_min, x_max)
-    h_2p2h_multiNuc             = create_histo("h_2p2h_mul",          "Multiple Nucleons",            ROOT.kRed+2,    3001, output_dic["2p2h_multipleNucleons"],        n_bins, x_min, x_max)
-    h_2p2h_multiNucAndNoFSI     = create_histo("h_2p2h_mul_noFSI",    "Multiple Nucleons & No FSI",   ROOT.kRed-4,    3001, output_dic["2p2h_multipleNucleonAndNoFSI"], n_bins, x_min, x_max)
-    h_2p2h_twoProton            = create_histo("h_2p2h_twoP",         "Two Proton",                   ROOT.kGreen+2,  3001, output_dic["2p2h_twoProton"],               n_bins, x_min, x_max)
-    h_2p2h_oneProtonAndNoFSI    = create_histo("h_2p2h_oneP_noFSI",   "One Proton & No FSI",          ROOT.kGreen,    3001, output_dic["2p2h_oneProtonAndNoFSI"],       n_bins, x_min, x_max)
-    h_2p2h_nucleonPion          = create_histo("h_2p2h_pion",         "Nucleon + Pion",               ROOT.kYellow-9, 3001, output_dic["2p2h_nucleonPion"],             n_bins, x_min, x_max)
-    h_2p2h_other                = create_histo("h_2p2h_oth",          "Other",                        ROOT.kGray,     3001, output_dic["2p2h_other"],                   n_bins, x_min, x_max)
+    # Creating histograms using the updated 2p2h_ lists
+    h_2p2h_noCascade    = create_histo("h_2p2h_noC",       "No Cascade FSI",      ROOT.kOrange-4, 3001, output_dic["2p2h_noCascadeFSI"],    n_bins, x_min, x_max)
+    h_2p2h_qe           = create_histo("h_2p2h_qe",        "QE Proton + De-ex",   ROOT.kOrange+7, 3001, output_dic["2p2h_qeDeEX"],          n_bins, x_min, x_max)
+    h_2p2h_elasticProton= create_histo("h_2p2h_elasticP",  "Elastic Proton",      ROOT.kGreen+2,  3001, output_dic["2p2h_elasticProton"],   n_bins, x_min, x_max)
+    h_2p2h_multiNuc     = create_histo("h_2p2h_mul",       "Multiple Nucleons",   ROOT.kRed+2,    3001, output_dic["2p2h_multipleNucleons"],n_bins, x_min, x_max)
+    h_2p2h_nucCluster   = create_histo("h_2p2h_nuc",       "Nuclear Clusters",    ROOT.kViolet-4, 3001, output_dic["2p2h_nuclearClusters"], n_bins, x_min, x_max)
+    h_2p2h_protonPion   = create_histo("h_2p2h_pion",      "Proton + Pion",       ROOT.kYellow-9, 3001, output_dic["2p2h_protonPion"],      n_bins, x_min, x_max)
+    h_2p2h_other        = create_histo("h_2p2h_oth",       "Other",               ROOT.kGray,     3001, output_dic["2p2h_other"],           n_bins, x_min, x_max)
+    
     pad1_c8.cd() 
 
     hs_2p2h = ROOT.THStack("hs_2p2h", "2p2h Proton Momentum by Channel;Momentum [MeV/c];Events")
     
     # Adding to stack (bottom to top)
     hs_2p2h.Add(h_2p2h_other)
-    hs_2p2h.Add(h_2p2h_nucleonPion)
-    hs_2p2h.Add(h_2p2h_oneProtonAndNoFSI)
-    hs_2p2h.Add(h_2p2h_twoProton)
-    hs_2p2h.Add(h_2p2h_multiNuc)
-    hs_2p2h.Add(h_2p2h_multiNucAndNoFSI)
+    hs_2p2h.Add(h_2p2h_protonPion)
     hs_2p2h.Add(h_2p2h_nucCluster)
-    hs_2p2h.Add(h_2p2h_nucClusterAndNoFSI)
-    hs_2p2h.Add(h_2p2h_noCascadeOneNucleon)
+    hs_2p2h.Add(h_2p2h_multiNuc)
+    hs_2p2h.Add(h_2p2h_elasticProton)
     hs_2p2h.Add(h_2p2h_noCascade)
     hs_2p2h.Add(h_2p2h_qe)
 
@@ -918,51 +929,40 @@ def INCL_processing(filename):
     total_integral_2p2h = sum(hist.Integral() for hist in hs_2p2h.GetHists())
     print(f"Total visible events in the 2p2h stack: {total_integral_2p2h}")
 
-    # Adjusted legend size to accommodate the 11 items
+    # Adjusted legend size
     legend_2p2h = ROOT.TLegend(0.45, 0.45, 0.88, 0.88)
     legend_2p2h.SetBorderSize(0)
     legend_2p2h.SetFillStyle(0) # Transparent
-    legend_2p2h.AddEntry(h_2p2h_qe,                  "QE proton + de-excitation",      "f")
-    legend_2p2h.AddEntry(h_2p2h_noCascade,           "No cascade FSI",                 "f")
-    legend_2p2h.AddEntry(h_2p2h_noCascadeOneNucleon, "No cascade FSI (one nucleon)",   "f")
-    legend_2p2h.AddEntry(h_2p2h_nucClusterAndNoFSI,  "Nuclear clusters & No FSI",      "f")
-    legend_2p2h.AddEntry(h_2p2h_nucCluster,          "Nuclear clusters",               "f")
-    legend_2p2h.AddEntry(h_2p2h_multiNucAndNoFSI,    "Multiple nucleons & No FSI",     "f")
-    legend_2p2h.AddEntry(h_2p2h_multiNuc,            "Multiple nucleons",              "f")
-    legend_2p2h.AddEntry(h_2p2h_twoProton,           "Two proton",                     "f")
-    legend_2p2h.AddEntry(h_2p2h_oneProtonAndNoFSI,   "One proton & No FSI",            "f")
-    legend_2p2h.AddEntry(h_2p2h_nucleonPion,         "Nucleon + pion",                 "f")
-    legend_2p2h.AddEntry(h_2p2h_other,               "Other",                          "f")
+    legend_2p2h.AddEntry(h_2p2h_qe,            "QE proton + de-excitation", "f")
+    legend_2p2h.AddEntry(h_2p2h_noCascade,     "No cascade FSI",            "f")
+    legend_2p2h.AddEntry(h_2p2h_elasticProton, "Elastic proton",            "f")
+    legend_2p2h.AddEntry(h_2p2h_multiNuc,      "Multiple nucleons",         "f")
+    legend_2p2h.AddEntry(h_2p2h_nucCluster,    "Nuclear clusters",          "f")
+    legend_2p2h.AddEntry(h_2p2h_protonPion,    "Proton + pion",             "f")
+    legend_2p2h.AddEntry(h_2p2h_other,         "Other",                     "f")
     legend_2p2h.Draw()
 
     pad2_c8.cd() 
 
+    # Create total histogram for ratio calculation
     h_total_2p2h = h_2p2h_nucCluster.Clone("h_total_2p2h")
-    h_total_2p2h.Add(h_2p2h_nucClusterAndNoFSI)
     h_total_2p2h.Add(h_2p2h_noCascade)
-    h_total_2p2h.Add(h_2p2h_noCascadeOneNucleon)
     h_total_2p2h.Add(h_2p2h_qe)
+    h_total_2p2h.Add(h_2p2h_elasticProton)
     h_total_2p2h.Add(h_2p2h_multiNuc)
-    h_total_2p2h.Add(h_2p2h_multiNucAndNoFSI)
-    h_total_2p2h.Add(h_2p2h_twoProton)
-    h_total_2p2h.Add(h_2p2h_oneProtonAndNoFSI)
-    h_total_2p2h.Add(h_2p2h_nucleonPion)
+    h_total_2p2h.Add(h_2p2h_protonPion)
     h_total_2p2h.Add(h_2p2h_other)
 
-    
-    r_2p2h_nucCluster          = create_ratio(h_2p2h_nucCluster, h_total_2p2h)
-    r_2p2h_nucClusterAndNoFSI  = create_ratio(h_2p2h_nucClusterAndNoFSI, h_total_2p2h)
-    r_2p2h_noCascade           = create_ratio(h_2p2h_noCascade, h_total_2p2h)
-    r_2p2h_noCascadeOneNucleon = create_ratio(h_2p2h_noCascadeOneNucleon, h_total_2p2h)
-    r_2p2h_qe                  = create_ratio(h_2p2h_qe, h_total_2p2h)
-    r_2p2h_multiNuc            = create_ratio(h_2p2h_multiNuc, h_total_2p2h)
-    r_2p2h_multiNucAndNoFSI    = create_ratio(h_2p2h_multiNucAndNoFSI, h_total_2p2h)
-    r_2p2h_twoProton           = create_ratio(h_2p2h_twoProton, h_total_2p2h)
-    r_2p2h_oneProtonAndNoFSI   = create_ratio(h_2p2h_oneProtonAndNoFSI, h_total_2p2h)
-    r_2p2h_nucleonPion         = create_ratio(h_2p2h_nucleonPion, h_total_2p2h)
-    r_2p2h_other               = create_ratio(h_2p2h_other, h_total_2p2h)
+    # Create ratios
+    r_2p2h_noCascade     = create_ratio(h_2p2h_noCascade, h_total_2p2h)
+    r_2p2h_qe            = create_ratio(h_2p2h_qe, h_total_2p2h)
+    r_2p2h_elasticProton = create_ratio(h_2p2h_elasticProton, h_total_2p2h)
+    r_2p2h_multiNuc      = create_ratio(h_2p2h_multiNuc, h_total_2p2h)
+    r_2p2h_nucCluster    = create_ratio(h_2p2h_nucCluster, h_total_2p2h)
+    r_2p2h_protonPion    = create_ratio(h_2p2h_protonPion, h_total_2p2h)
+    r_2p2h_other         = create_ratio(h_2p2h_other, h_total_2p2h)
 
-    
+    # Draw ratios
     r_2p2h_noCascade.Draw("HIST") 
     r_2p2h_noCascade.SetTitle(";P_{aft} (MeV/c);Fractional Contributions") 
 
@@ -979,17 +979,14 @@ def INCL_processing(filename):
     x_axis_2p2h.SetTitleOffset(1.0)
 
     # Draw the remaining ratios on top
-    r_2p2h_nucCluster.Draw("HIST SAME")
-    r_2p2h_nucClusterAndNoFSI.Draw("HIST SAME")
-    r_2p2h_noCascadeOneNucleon.Draw("HIST SAME")
     r_2p2h_qe.Draw("HIST SAME")
+    r_2p2h_elasticProton.Draw("HIST SAME")
     r_2p2h_multiNuc.Draw("HIST SAME")
-    r_2p2h_multiNucAndNoFSI.Draw("HIST SAME")
-    r_2p2h_twoProton.Draw("HIST SAME")
-    r_2p2h_oneProtonAndNoFSI.Draw("HIST SAME")
-    r_2p2h_nucleonPion.Draw("HIST SAME")
+    r_2p2h_nucCluster.Draw("HIST SAME")
+    r_2p2h_protonPion.Draw("HIST SAME")
     r_2p2h_other.Draw("HIST SAME")
-    c8.Update()  
+    
+    c8.Update()
 
 
     file.cd()
@@ -1000,6 +997,7 @@ def INCL_processing(filename):
     c4.Write()
     c6.Write()
     c7.Write()
+    c9.Write()
     c8.Write()
     file.Close()
     #c1.SaveAs("proton_channels_{}.root".format(filename_chunk)) 

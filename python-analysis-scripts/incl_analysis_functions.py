@@ -29,17 +29,13 @@ class intChannel_CCQE(Enum):
 class intChannel_CC0pi(Enum):
     noCascadeFSI = 0 # two protons leave without changing 
     qeDeEX = 1 # two protons leave without changing, plus deexcitation
-    twoProton = 2 # both protons change energy. 
-    multipleNucleonAndNoFSI = 3 
-    multipleNucleons = 4 
-    nuclearClustersAndNoFSI = 5
-    nuclearClusters = 6
-    nucleonPion = 7
-    muOnly = 8
-    other = 9
-    noCascadeFSIoneNucleon = 10
-    neutronPion = 11
-    oneProtonAndNoFSI = 12
+    elasticProton = 2 # both protons change energy. 
+    multipleNucleons = 3 
+    nuclearClusters = 4
+    protonPion = 5
+    muOnly = 6
+    other = 7
+    neutronPion = 8
 
 def create_histo(name, title, color, fill_style, data,n_bins,x_min,x_max, line = False):
 
@@ -61,6 +57,7 @@ def create_histo(name, title, color, fill_style, data,n_bins,x_min,x_max, line =
 
 class nvect_reader:
     def __init__(self, nvect_,flavour = 2212):
+        
         self.intChannel = None
         self.HMPMom = None
         self.PreFSIProtMom = 0
@@ -69,17 +66,59 @@ class nvect_reader:
         self.novert = self.nvect.NnucFsiVert()
         self.nosteps = self.nvect.NnucFsiStep()
         self.beam_flavour = flavour
-        self.isnofsi = True if self.nopart <=5 else False
+        if self.nopart <=5:
+            self.isnofsi = True 
+        else:
+            self.isnofsi = False
+        self.istransparent = False
+        self.fsiProton = 0.0
+        self.neutrino = self.nu()
+        if self.nubar == True:
+            self.incoming_nucleon = 2212
+            self.outgoing_nucleon = 2112
+            self.incoming_nu = self.neutrino
+            self.outgoing_lep = -(abs(self.neutrino)-1)
+            self.outgoing_mass = 939.565
+        else:
+            self.incoming_nucleon = 2112
+            self.outgoing_nucleon = 2212
+            self.incoming_nu = self.neutrino
+            self.outgoing_lep = self.neutrino - 1
+            self.outgoing_mass = 938.272
+
+
 
         self.eventType = self.event_type()
         if self.eventType == EventType.MF:
             self.intChannel = self.interaction_channel_CCQE()
-        elif self.eventType == (EventType.SRC or EventType.twop2h):
+        elif (self.eventType == EventType.SRC or  self.eventType == EventType.twop2h):
             self.intChannel = self.interaction_channel_CC0pi()
 
         if (self.eventType == EventType.MF) or (self.eventType == EventType.SRC) or (self.eventType == EventType.twop2h):
             self.E_miss = self.missing_E_calc()
-            self.P_miss = self.neutron_mom()
+            self.P_miss = self.missing_mom()
+    
+    def nu(self):
+         for i in range(self.nopart):
+            pinfo = self.nvect.PartInfo(i)
+            if pinfo.fPID == -14:
+                self.nubar = True
+                return -14
+            elif pinfo.fPID == 14:
+                self.nubar = False
+                return 14
+            if pinfo.fPID == -16:
+                self.nubar = True
+                return -16
+            elif pinfo.fPID == 16:
+                self.nubar = False
+                return 16
+            if pinfo.fPID == -12:
+                self.nubar = True
+                return -12
+            elif pinfo.fPID == 12:
+                self.nubar = False
+                return 12
                 
     def event_type(self):
         if self.NC_Pi_prod() == True:
@@ -94,6 +133,18 @@ class nvect_reader:
             return EventType.SRC
         else:
             return EventType.MF
+        
+    def multiplicity(self):  
+        multiplicity = 0
+        particles = []
+        for i in range(self.nopart):
+            pinfo = self.nvect.PartInfo(i)  
+            if pinfo.fIsAlive == 1:
+                if pinfo.fPID != self.outgoing_lep:
+                    particles.append(pinfo.fPID)
+                    
+
+        return particles
            
     def proton_momentum_per_channel_CCQE(self):
         p_casc_energy = []
@@ -108,19 +159,17 @@ class nvect_reader:
         proton_mom_prefsi = 0
         deexcitation_event = False
         init_proton_mom = None
+        deex_counter = 0
 
         for i in range(self.nopart):
 
-
             pinfo = self.nvect.PartInfo(i)
-
-            if pinfo.fStatus == 10 and (pinfo.fPID < 10000):
-                deexcitation_event = True
             
-            if pinfo.fPID == abs(2212): #getting proton momentum 
+            if pinfo.fPID == self.outgoing_nucleon: #getting proton momentum 
                 if (pinfo.fIsAlive == 0 and self.nvect.ParentIdx(i)==2):
                     init_proton_mom = np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()])
                     proton_mom_prefsi = np.linalg.norm(init_proton_mom)
+                    self.fsiProton = proton_mom_prefsi
 
                 elif (pinfo.fIsAlive == 1 and self.nvect.ParentIdx(i)==2 and self.nopart == 4):
                     p_casc_energy.append(np.sqrt((pinfo.fP.X()**2 + pinfo.fP.Y()**2 +pinfo.fP.Z()**2)))
@@ -131,38 +180,38 @@ class nvect_reader:
                 elif (pinfo.fIsAlive == 1):
                     p_casc_energy.append(np.sqrt((pinfo.fP.X()**2 + pinfo.fP.Y()**2 +pinfo.fP.Z()**2)))
                     pre_fsi_proton_mom = np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()])
+                    
                     nucleonCounter += 1
                     proton = True
                      
-                    #if (self.nvect.ParentIdx(i)==4):
-                    #    pre_fsi_proton_mom = np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()])
-                    #    #print(init_proton_mom - pre_fsi_proton_mom )
-                    #    #print(np.linalg.norm(init_proton_mom - pre_fsi_proton_mom ))
-                    #    if (np.linalg.norm(pre_fsi_proton_mom - init_proton_mom) < 0.007):
-                    #        transparentProton = True 
+                    if (self.nvect.ParentIdx(i)==4):
+                        pre_fsi_proton_mom = np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()])
+                        
+
                     if (self.nvect.ParentIdx(i) != 2 and init_proton_mom is not None):
-                        if (np.linalg.norm(pre_fsi_proton_mom - init_proton_mom) < 0.007):
+                        if (np.linalg.norm(pre_fsi_proton_mom - init_proton_mom)/np.linalg.norm(init_proton_mom) < 0.005):
                             transparentProton = True
 
 
-            elif pinfo.fPID == abs(2112):
+            elif pinfo.fPID == (self.incoming_nucleon):
                 if (pinfo.fIsAlive == 1):
                     nucleonCounter += 1
-
-            elif pinfo.fPID > abs(10000):
-                if (pinfo.fIsAlive == 1):
-                    nuclear_remnant = True
 
             elif 200 < abs(pinfo.fPID) < 250:
                 if (pinfo.fIsAlive == 1):
                     pion = True
-            
-            elif ((10000 > pinfo.fPID > 1000) and (pinfo.fIsAlive == 1)):
-                if((pinfo.fPID != 2212) and (pinfo.fPID != 2112) and (pinfo.fPID != 6011)and (pinfo.fPID != 13)):
+
+            elif((pinfo.fPID > 1000000) and (pinfo.fIsAlive == 1)):
                    clusterCounter += 1
 
-            elif (pinfo.fPID == 0 and pinfo.fIsAlive == 1):
+            elif (pinfo.fPID == 22 and pinfo.fIsAlive == 1):
                 photonCounter +=1
+
+            if (pinfo.fStatus == 10 and pinfo.fIsAlive == 1):
+                deex_counter +=1
+
+            if deex_counter > 1:
+                deexcitation_event = True
                  
         return p_casc_energy,nuclear_remnant, nucleonCounter, clusterCounter, transparentProton, pion, photonCounter, proton, proton_mom_prefsi,deexcitation_event
 
@@ -177,6 +226,7 @@ class nvect_reader:
         nucleonCounter = 0
         clusterCounter = 0
         nuclear_remnant = False
+        deex_counter = 0
         pion = False
         proton = False
         photonCounter = False
@@ -187,26 +237,23 @@ class nvect_reader:
         for i in range(self.nopart):
             pinfo = self.nvect.PartInfo(i)
 
-            if pinfo.fStatus == 10 and (pinfo.fPID < 10000):
-                deexcitation_event = True
-
-            if pinfo.fPID ==abs(2112):
+            if pinfo.fPID ==(self.incoming_nucleon):
                 if(pinfo.fIsAlive == 0 and self.nvect.ParentIdx(i)==0 and pinfo.fStatus == 7):
                     init_src_nucleon_mom = np.linalg.norm(np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()]))
-                    src_partner_flavour = 2212
+
                 elif (pinfo.fIsAlive == 1):
                     #proton = True
                     fsi_neutron_energy.append(np.sqrt((pinfo.fP.X()**2 + pinfo.fP.Y()**2 +pinfo.fP.Z()**2)))
     
                     nucleonCounter += 1
             
-            if pinfo.fPID == abs(2212): #getting proton momentum 
+            if pinfo.fPID == self.outgoing_nucleon: #getting proton momentum 
                 if (pinfo.fIsAlive == 0 and self.nvect.ParentIdx(i)==2 and pinfo.fStatus ==7):
                     init_main_proton_mom = np.linalg.norm(np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()]))
 
                 elif(pinfo.fIsAlive == 0 and self.nvect.ParentIdx(i)==0 and pinfo.fStatus ==7):
                     init_src_nucleon_mom = np.linalg.norm(np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()]))
-                    src_partner_flavour = 2212
+
 
                 elif (pinfo.fIsAlive == 1):
                     proton = True
@@ -214,32 +261,27 @@ class nvect_reader:
     
                     nucleonCounter += 1
 
-            elif pinfo.fPID > abs(10000):
-                if (pinfo.fIsAlive == 1):
-                    nuclear_remnant = True
-
-            elif 200 < abs(pinfo.fPID) < 250:
+            elif 200 < (pinfo.fPID) < 250:
                 if (pinfo.fIsAlive == 1):
                     pion = True
             
-            elif ((10000 > pinfo.fPID > 1000) and (pinfo.fIsAlive == 1)):
-                if((pinfo.fPID != 2212) and (pinfo.fPID != 2112) and (pinfo.fPID != 6011)and (pinfo.fPID != 13)):
+            elif((pinfo.fPID > 1000000) and (pinfo.fIsAlive == 1)):
                    clusterCounter += 1
 
-            elif (pinfo.fPID == 0 and pinfo.fIsAlive == 1):
+            elif (pinfo.fPID == 22 and pinfo.fIsAlive == 1):
                 photonCounter +=1
 
+            if (pinfo.fStatus == 10 and pinfo.fIsAlive == 1):
+                deex_counter +=1
 
+            if deex_counter > 1:
+                deexcitation_event = True
         
-
         all_fsi_energies = fsi_neutron_energy + fsi_proton_energy
 
-        # We use an absolute tolerance (abs_tol) of 0.01, which is equivalent 
-        # to checking if they match up to the 2nd decimal place.
         main_present = any(math.isclose(init_main_proton_mom, energy, abs_tol=0.01) for energy in all_fsi_energies)
         src_present = any(math.isclose(init_src_nucleon_mom, energy, abs_tol=0.01) for energy in all_fsi_energies)
 
-        # The if-else logic remains the same
         if main_present and src_present:
             transparentNucleons = 2
         elif main_present or src_present:
@@ -247,7 +289,6 @@ class nvect_reader:
         else:
             transparentNucleons = 0
                  
-
         return fsi_proton_energy, nuclear_remnant, nucleonCounter, clusterCounter, transparentNucleons, pion, photonCounter, deexcitation_event,proton
 
     def proton_momentum_per_channel_2p2h(self):
@@ -267,14 +308,12 @@ class nvect_reader:
         proton_mom_prefsi = 0
         deexcitation_event = False
         init_proton_mom = None
+        deex_counter = 0
 
         for i in range(self.nopart):
             pinfo = self.nvect.PartInfo(i)
 
-            if pinfo.fStatus == 10 and (pinfo.fPID < 10000):
-                deexcitation_event = True
-
-            if pinfo.fPID ==abs(2112):
+            if pinfo.fPID ==2112:
                 if(pinfo.fIsAlive == 0 and self.nvect.ParentIdx(i)==2 and pinfo.fStatus == 7):
                     init_main_nucleon_mom = np.linalg.norm(np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()]))
 
@@ -288,8 +327,8 @@ class nvect_reader:
     
                     nucleonCounter += 1
             
-            if pinfo.fPID == abs(2212): #getting proton momentum 
-                if (pinfo.fIsAlive == 0 and self.nvect.ParentIdx(i)==2 and pinfo.fStatus ==7):
+            if pinfo.fPID == 2212: #getting proton momentum 
+                if (pinfo.fIsAlive == 0 and (self.nvect.ParentIdx(i)==2) and pinfo.fStatus ==7):
                     init_main_proton_mom = np.linalg.norm(np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()]))
 
                 elif(pinfo.fIsAlive == 0 and self.nvect.ParentIdx(i)==3 and pinfo.fStatus ==7):
@@ -302,30 +341,31 @@ class nvect_reader:
     
                     nucleonCounter += 1
 
-            elif pinfo.fPID > abs(10000):
-                if (pinfo.fIsAlive == 1):
-                    nuclear_remnant = True
 
-            elif 200 < abs(pinfo.fPID) < 250:
+            elif 200 < (pinfo.fPID) < 250:
                 if (pinfo.fIsAlive == 1):
                     pion = True
             
-            elif ((10000 > pinfo.fPID > 1000) and (pinfo.fIsAlive == 1)):
-                if((pinfo.fPID != 2212) and (pinfo.fPID != 2112) and (pinfo.fPID != 6011)and (pinfo.fPID != 13)):
-                   clusterCounter += 1
+            elif((pinfo.fPID > 1000000) and (pinfo.fIsAlive == 1)):
+                clusterCounter += 1
+
+            elif (pinfo.fPID == 22 and pinfo.fIsAlive == 1):
+                photonCounter +=1
+
+            if (pinfo.fStatus == 10 and pinfo.fIsAlive == 1):
+                deex_counter +=1
+
+            if deex_counter > 1:
+                deexcitation_event = True
 
             elif (pinfo.fPID == 0 and pinfo.fIsAlive == 1):
                 photonCounter +=1
 
 
         all_fsi_energies = fsi_neutron_energy + fsi_proton_energy
-
-        # We use an absolute tolerance (abs_tol) of 0.01, which is equivalent 
-        # to checking if they match up to the 2nd decimal place.
         main_present = any(math.isclose(init_main_proton_mom, energy, abs_tol=0.01) for energy in all_fsi_energies)
         second_present = any(math.isclose(init_second_nucleon_mom, energy, abs_tol=0.01) for energy in all_fsi_energies)
 
-        # The if-else logic remains the same
         if main_present and second_present:
             transparentNucleons = 2
         elif main_present or second_present:
@@ -333,14 +373,13 @@ class nvect_reader:
         else:
             transparentNucleons = 0
                  
-
         return fsi_proton_energy, nuclear_remnant, nucleonCounter, clusterCounter, transparentNucleons, pion, photonCounter, deexcitation_event,proton
 
     def NC(self):
         neutrino_counter = 0
         for i in range(self.nopart):
             pinfo = self.nvect.PartInfo(i)
-            if pinfo.fPID == abs(14):
+            if abs(pinfo.fPID) == 14:
                 neutrino_counter += 1
                 if neutrino_counter == 2:
                     return True
@@ -361,7 +400,7 @@ class nvect_reader:
 
         for i in range(self.nopart):
             pinfo = self.nvect.PartInfo(i)
-            if pinfo.fPID == abs(14):
+            if abs(pinfo.fPID) == 14:
                 neutrino_counter += 1
                 if neutrino_counter == 2:
                     neutrino = True
@@ -386,12 +425,12 @@ class nvect_reader:
             init_proton_mom = 0
             for i in range(self.nopart):
                 pinfo = self.nvect.PartInfo(i)
-                if pinfo.fPID == abs(2112):
+                if pinfo.fPID == self.incoming_nucleon:
                     if (pinfo.fIsAlive == 0) and (self.nvect.ParentIdx(i)== 0) and (pinfo.fStatus == -1):
                         init_proton_mom = np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()])
                         continue
 
-                if pinfo.fPID == abs(2212) or pinfo.fPID == abs(2112):
+                if pinfo.fPID == (2212) or pinfo.fPID == (2112):
                     if pinfo.fStatus == 7:
                         proton_mom2 = np.array([-pinfo.fP.X(),-pinfo.fP.Y(), -pinfo.fP.Z()])
 
@@ -403,7 +442,7 @@ class nvect_reader:
         twop2hcounter = 0
         for i in range(self.nopart):
             pinfo = self.nvect.PartInfo(i)
-            if pinfo.fPID == abs(2112) or pinfo.fPID == abs(2212):
+            if pinfo.fPID == (2112) or pinfo.fPID == (2212):
                  if(self.nvect.ParentIdx(i)== 0 and pinfo.fStatus == -1):
                      twop2hcounter +=1
         if twop2hcounter > 1:
@@ -417,71 +456,90 @@ class nvect_reader:
         T_had = 0.0
         for i in range(self.nopart):
             pinfo = self.nvect.PartInfo(i)
-            if pinfo.fPID == abs(14):
+            if pinfo.fPID == self.incoming_nu:
                 E_nu = np.linalg.norm(np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()]))
-            if pinfo.fPID == abs(13):
+            if pinfo.fPID == self.outgoing_lep:
                 E_lep = np.sqrt(np.linalg.norm(np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()]))**2 + 105.0**2)
-            if pinfo.fPID == abs(2212) and (self.nvect.ParentIdx(i)==2):
+            if pinfo.fPID == self.outgoing_nucleon and (self.nvect.ParentIdx(i)==2):
                 T_had = np.sqrt(np.linalg.norm(np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()]))**2 + 938.00**2) - 938.00
 
         return E_nu - E_lep - T_had
         
     def excitation_E_CCQE(self):
-        print(self.eventType)
         E_nu = 0.0
         E_lep = 0.0 
         E_had = 0.0
         p_had = 0.0
         for i in range(self.nopart):
             pinfo = self.nvect.PartInfo(i)
-            if pinfo.fPID == abs(14):
+            if pinfo.fPID == self.incoming_nu:
                 p_nu = np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()])
                 E_nu = np.linalg.norm(np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()]))
-            if pinfo.fPID == abs(13):
+            if (pinfo.fPID) == self.outgoing_lep:
                 p_lep = np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()])
                 E_lep = np.sqrt(np.linalg.norm(np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()]))**2 + 105.0**2)
-            if pinfo.fPID == abs(2212) and (self.nvect.ParentIdx(i)==2):
+            if pinfo.fPID == self.outgoing_nucleon and (self.nvect.ParentIdx(i)==2):
                 p_had += np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()])
-                E_had += np.sqrt(np.linalg.norm(np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()]))**2 + 938.00**2) 
-            if (pinfo.fPID == abs(2212) or pinfo.fPID == abs(2112)) and (self.nvect.ParentIdx(i)==0) and (pinfo.fStatus ==7):
-                p_had += np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()])
-                E_had += np.sqrt(np.linalg.norm(np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()]))**2 + 938.00**2) 
+                E_had += np.sqrt(np.linalg.norm(np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()]))**2 + self.outgoing_mass**2) 
 
 
         E_star = E_nu + 11174.86 - E_lep - E_had
-        p_star = p_nu - p_lep - p_had
+        p_star = 0.0 #p_nu - p_lep - p_had
 
-        E = np.sqrt(E_star**2 - np.linalg.norm(p_star**2)) - 10254.22
+        if self.nubar == True:
+            E = np.sqrt(E_star**2 - np.linalg.norm(p_star**2)) - 10252.61
+        elif self.nubar == False:
+            E = np.sqrt(E_star**2 - np.linalg.norm(p_star**2)) - 10254.27
+
         return E   
     
     def excitation_E_SRC(self):
-        print(self.eventType)
         E_nu = 0.0
         E_lep = 0.0 
         E_had = 0.0
         p_had = 0.0
+        proton_counter = 0
         for i in range(self.nopart):
             pinfo = self.nvect.PartInfo(i)
-            if pinfo.fPID == abs(14):
+            if (pinfo.fPID) == self.incoming_nu:
                 p_nu = np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()])
                 E_nu = np.linalg.norm(np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()]))
-            if pinfo.fPID == abs(13):
+            if (pinfo.fPID) == self.outgoing_lep:
                 p_lep = np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()])
                 E_lep = np.sqrt(np.linalg.norm(np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()]))**2 + 105.0**2)
-            if pinfo.fPID == abs(2212) and (self.nvect.ParentIdx(i)==2):
-                p_had += np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()])
-                E_had += np.sqrt(np.linalg.norm(np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()]))**2 + 938.00**2) 
-            if (pinfo.fPID == abs(2212) or pinfo.fPID == abs(2112)) and (self.nvect.ParentIdx(i)==0) and (pinfo.fStatus ==7):
-                p_had += np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()])
-                E_had += np.sqrt(np.linalg.norm(np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()]))**2 + 938.00**2) 
 
+            if pinfo.fPID == self.outgoing_nucleon and (self.nvect.ParentIdx(i)==2):
+                p_had += np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()])
+                E_had += np.sqrt(np.linalg.norm(np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()]))**2 + self.outgoing_mass**2) 
+                if pinfo.fPID == (2212):
+                    proton_counter += 1
+            if (pinfo.fPID == (2212) or pinfo.fPID == (2112)) and (self.nvect.ParentIdx(i)==0) and (pinfo.fStatus ==7 or pinfo.fStatus ==0):
+                p_had += np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()])
+                if pinfo.fPID == (2212):
+                    proton_counter += 1
+                    E_had += np.sqrt(np.linalg.norm(np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()]))**2 + 938.27**2) 
+                elif pinfo.fPID == 2112:
+                    E_had += np.sqrt(np.linalg.norm(np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()]))**2 + 939.56**2) 
+
+        print(E_nu, E_lep, E_had)
 
         E_star = E_nu + 11174.86 - E_lep - E_had
-        p_star = p_nu - p_lep - p_had
+        print(E_star)
+        p_star = 0.0 #p_nu - p_lep - p_had
+        print(proton_counter)
+        if (proton_counter == 1):
+            Nuclear_mass = (5)*938.27 + (5)*939.57  - 64.75
+        elif (proton_counter == 2):
+            Nuclear_mass = (4)*938.27 + (6)*939.57  - 64.98
+        else:
+            Nuclear_mass = (6)*938.27 + (4)*939.57  - 60.32
+        print(Nuclear_mass)
 
-        E = np.sqrt(E_star**2 - np.linalg.norm(p_star**2)) - (10254.22 - 938.27)
-        if self.eventType == EventType.SRC:
+        E = np.sqrt(E_star**2 - np.linalg.norm(p_star**2)) - Nuclear_mass
+        print(E)
+        if E < 0.0:
             print(E)
+
         return E   
     
     def excitation_E_2p2h(self):
@@ -490,54 +548,64 @@ class nvect_reader:
         E_lep = 0.0 
         E_had = 0.0
         p_had = 0.0
+        proton_counter =0
+        neutron_counter = 0
         for i in range(self.nopart):
             pinfo = self.nvect.PartInfo(i)
-            if pinfo.fPID == abs(14):
+            if pinfo.fPID == self.incoming_nu:
                 p_nu = np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()])
                 E_nu = np.linalg.norm(np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()]))
-            if pinfo.fPID == abs(13):
+            if pinfo.fPID == self.outgoing_lep:
                 p_lep = np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()])
                 E_lep = np.sqrt(np.linalg.norm(np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()]))**2 + 105.0**2)
-            if pinfo.fPID == abs(2212) and (pinfo.fStatus ==7) and ((self.nvect.ParentIdx(i)==2) or (self.nvect.ParentIdx(i)==3)):
+            if pinfo.fPID == (2212) and (pinfo.fStatus ==7 or pinfo.fStatus == 0) and ((self.nvect.ParentIdx(i)==2) or (self.nvect.ParentIdx(i)==3)):
                 p_had += np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()])
                 E_had += np.sqrt(np.linalg.norm(np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()]))**2 + 938.00**2)
-            if pinfo.fPID == abs(2112) and (pinfo.fStatus ==7) and ((self.nvect.ParentIdx(i)==2) or (self.nvect.ParentIdx(i)==3)):
+                proton_counter += 1
+            if pinfo.fPID == (2112) and (pinfo.fStatus ==7 or pinfo.fStatus == 0) and ((self.nvect.ParentIdx(i)==2) or (self.nvect.ParentIdx(i)==3)):
                 p_had += np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()])
                 E_had += np.sqrt(np.linalg.norm(np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()]))**2 + 938.00**2) 
+                neutron_counter += 1
 
         E_star = E_nu + 11174.86 - E_lep - E_had
         p_star = p_nu - p_lep - p_had
+        if (neutron_counter == 1 and proton_counter == 1):
+            Nuclear_mass = (6-proton_counter)*938.37 + (6-neutron_counter)*939.57  - 64.75
+        elif (proton_counter == 2):
+            Nuclear_mass = (6-proton_counter)*938.37 + (6-neutron_counter)*939.57  - 64.98
+        elif (neutron_counter == 2):
+            Nuclear_mass = (6-proton_counter)*938.37 + (6-neutron_counter)*939.57  - 60.32
+        
 
-        E = np.sqrt(E_star**2 - np.linalg.norm(p_star**2)) - (11174.86 - 2*938.27)
-        print(E)
+        E = np.sqrt(E_star**2 - np.linalg.norm(p_star**2)) - Nuclear_mass
         return E
 
     def missing_energy_2p2h(self):
+        self.Print()
 
         E_nu = 0.0
         E_lep = 0.0 
         T_had = 0.0
         for i in range(self.nopart):
             pinfo = self.nvect.PartInfo(i)
-            if pinfo.fPID == abs(14):
+            if pinfo.fPID == self.incoming_nu:
                 E_nu = np.linalg.norm(np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()]))
-            if pinfo.fPID == abs(13):
+            if pinfo.fPID == self.outgoing_lep:
                 E_lep = np.sqrt(np.linalg.norm(np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()]))**2 + 105.0**2)
-            if pinfo.fPID == abs(2212) and (pinfo.fStatus ==0):
+            
+            if pinfo.fPID == (2212)and (pinfo.fStatus ==7 or pinfo.fStatus == 0) and ((self.nvect.ParentIdx(i)==2) or (self.nvect.ParentIdx(i)==3)):
                 T_had += np.sqrt(np.linalg.norm(np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()]))**2 + 938.00**2) - 938.00
-            if pinfo.fPID == abs(2112) and (pinfo.fStatus ==0):
+            if pinfo.fPID == (2112) and (pinfo.fStatus ==7 or pinfo.fStatus == 0) and ((self.nvect.ParentIdx(i)==2) or (self.nvect.ParentIdx(i)==3)):
                 T_had += np.sqrt(np.linalg.norm(np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()]))**2 + 938.00**2) - 938.00
 
         return E_nu - E_lep - T_had
 
-
-    def neutron_mom(self):
+    def missing_mom(self):
         for i in range(self.nopart):
             pinfo = self.nvect.PartInfo(i)
-            if ((pinfo.fPID == abs(2112)) and  (pinfo.fStatus == -1)):
+            if ((pinfo.fPID == self.incoming_nucleon) and  (pinfo.fStatus == -1)):
                 return np.linalg.norm(np.array([pinfo.fP.X(),pinfo.fP.Y(), pinfo.fP.Z()]))
             
-
     def remnant(self):
         A = 0
         Z = 0
@@ -569,13 +637,13 @@ class nvect_reader:
 
             pinfo = self.nvect.PartInfo(i)
             #get neutrino momentum direction
-            if pinfo.fPID == abs(14):
+            if pinfo.fPID == self.incoming_nu:
                 neutrino_mometum = np.asarray([pinfo.fP.X(), pinfo.fP.Y() ,pinfo.fP.Z()])
 
-            if pinfo.fPID == abs(13):
+            if pinfo.fPID == self.outgoing_lep:
                 lepton_momentum = np.asarray([pinfo.fP.X(), pinfo.fP.Y() ,pinfo.fP.Z()])
 
-            if pinfo.fPID == abs(2212): #getting proton momentum  
+            if pinfo.fPID == self.outgoing_nucleon: #getting proton momentum  
                 if (pinfo.fIsAlive == 1):
                     proton_mometum_placeholder = np.asarray([pinfo.fP.X(), pinfo.fP.Y() ,pinfo.fP.Z()])
                     if(np.linalg.norm(proton_mometum_placeholder) > np.linalg.norm(proton_momentum)):
@@ -610,16 +678,16 @@ class nvect_reader:
             print("energy", np.sqrt(P+pinfo.fMass**2)-pinfo.fMass)
         
         print(self.eventType.name)
-
+        print(self.intChannel.name)
         return self.eventType.name
-        #print(self.intChannel.name)
     
     def kinetic_energy(self,pinfo):
         return np.sqrt((pinfo.fP.X()**2 + pinfo.fP.Y()**2 +pinfo.fP.Z()**2)+pinfo.fMass**2)-pinfo.fMass
 
-
     def interaction_channel_CCQE(self):
+
         p_casc_energy,nuclear_remnant, nucleonCounter, clusterCounter, transparentProton, pion, photonCounter,proton,prefsi_proton_mom, deex_event = self.proton_momentum_per_channel_CCQE()
+
         if len(p_casc_energy) > 0:
             self.HMPMom = np.asarray(p_casc_energy).max()
             self.DpT,self.DaT = self.get_deltaPT()
@@ -633,39 +701,43 @@ class nvect_reader:
                 return intChannel_CCQE.muOnly
         
             
-        elif (transparentProton == True) and (clusterCounter == 0) and (proton == True)  and (pion == False) and (photonCounter == False) and (deex_event == False):
+        elif (transparentProton == True) and (clusterCounter <= 1) and (proton == True)  and (pion == False) and (photonCounter == False) and (deex_event == False):
             return intChannel_CCQE.noCascadeFSI
 
         elif (transparentProton == True) and (deex_event == True) and (proton == True):  
             return intChannel_CCQE.qeDeEX
         
-        elif (transparentProton == False) and (proton == True) and (clusterCounter == 0) and (nucleonCounter == 1)  and (pion == False):
+        elif (transparentProton == False) and (proton == True) and (clusterCounter <= 1) and (nucleonCounter == 1)  and (pion == False):
             return intChannel_CCQE.oneProton
             
-        elif (transparentProton == False) and (proton == True) and (clusterCounter == 0 ) and (nucleonCounter > 1)  and (pion == False):
+        elif (transparentProton == False) and (proton == True) and (clusterCounter <= 1) and (nucleonCounter > 1)  and (pion == False):
             return intChannel_CCQE.multipleNucleon
         
-        elif (transparentProton == False) and (proton == True) and (clusterCounter >= 1) and (nucleonCounter >= 1):
+        elif (transparentProton == False) and (proton == True) and (clusterCounter >= 2) and (nucleonCounter >= 1):
             return intChannel_CCQE.nuclearCluster
 
-        elif (transparentProton == False) and (proton == True) and (clusterCounter == 0)  and (pion == True):   
+        elif (transparentProton == False) and (proton == True) and (clusterCounter <= 1) and (pion == True):   
             return intChannel_CCQE.protonPion
         else:
+            print( p_casc_energy,nuclear_remnant, nucleonCounter, clusterCounter, transparentProton, pion, photonCounter,proton, deex_event)
+            self.Print()
             return intChannel_CCQE.other
-
 
     def interaction_channel_CC0pi(self):
         if self.eventType == EventType.SRC:
             p_casc_energy, nuclear_remnant, nucleonCounter, clusterCounter, transparentNucleons, pion, photonCounter, deex_event,proton = self.proton_momentum_per_channel_SRC()
         if self.eventType == EventType.twop2h:
             p_casc_energy, nuclear_remnant, nucleonCounter, clusterCounter, transparentNucleons, pion, photonCounter, deex_event,proton = self.proton_momentum_per_channel_2p2h()
-
+        
         #print("transparentNucleons, proton, clusterCounter, nucleonCounter, pion")
         #print(transparentNucleons, proton, clusterCounter, nucleonCounter, pion)
         
         if len(p_casc_energy) > 0:
             self.HMPMom = np.asarray(p_casc_energy).max()
             self.DpT,self.DaT = self.get_deltaPT()
+
+        if (transparentNucleons > 0):
+            self.istransparent = True
 
         if(proton != True):
             self.intChannel = intChannel_CC0pi.neutronPion
@@ -678,40 +750,26 @@ class nvect_reader:
                 return intChannel_CCQE.muOnly
         
             
-        elif (transparentNucleons == 2) and (clusterCounter == 0) and (proton == True)  and (pion == False) and (photonCounter == False) and (deex_event == False):
+        elif (transparentNucleons == 2) and (clusterCounter <= 1) and (proton == True)  and (pion == False) and (photonCounter == False) and (deex_event == False):
             return intChannel_CC0pi.noCascadeFSI
-        
-        elif (transparentNucleons == 1) and (nucleonCounter == 1) and (clusterCounter == 0) and (proton == True)  and (pion == False) and (photonCounter == False) and (deex_event == False):
-            return intChannel_CC0pi.noCascadeFSIoneNucleon
         
         elif (transparentNucleons == 2) and (deex_event == True) and (proton == True):  
             return intChannel_CC0pi.qeDeEX
         
-        elif (transparentNucleons == 0) and (proton == True) and (clusterCounter == 0) and (nucleonCounter == 2)  and (pion == False):
-            return intChannel_CC0pi.twoProton
+        elif (transparentNucleons < 2) and (proton == True) and (clusterCounter <= 1)  and (nucleonCounter == 2)  and (pion == False):
+            return intChannel_CC0pi.elasticProton
         
-        elif (transparentNucleons == 1) and (proton == True) and (clusterCounter == 0) and (nucleonCounter == 1)  and (pion == False):
-            return intChannel_CC0pi.oneProtonAndNoFSI
-            
-        elif (transparentNucleons == 1) and (proton == True) and (clusterCounter == 0 ) and (nucleonCounter > 1)  and (pion == False):
-            return intChannel_CC0pi.multipleNucleonAndNoFSI
-        
-        elif (transparentNucleons == 0) and (proton == True) and (clusterCounter == 0 ) and (nucleonCounter > 1)  and (pion == False):
+        elif (transparentNucleons <= 1) and (proton == True) and (clusterCounter <= 1)  and (nucleonCounter >= 3)  and (pion == False):
             return intChannel_CC0pi.multipleNucleons
         
-        elif (transparentNucleons == 1) and (proton == True) and (clusterCounter >= 1) and (nucleonCounter >= 1):
-            return intChannel_CC0pi.nuclearClustersAndNoFSI
-
-        elif (transparentNucleons == 0) and (proton == True) and (clusterCounter >= 1) and (nucleonCounter >= 1):
+        elif (transparentNucleons <= 1) and (proton == True) and (clusterCounter > 1) and (nucleonCounter >= 1):
             return intChannel_CC0pi.nuclearClusters
 
-        elif (transparentNucleons < 2) and (proton == True) and (clusterCounter == 0)  and (pion == True):   
-            return intChannel_CC0pi.nucleonPion
+        elif (transparentNucleons < 2) and (proton == True) and (clusterCounter <= 0)  and (pion == True):   
+            return intChannel_CC0pi.protonPion
         else:
-            #print(transparentNucleons)
-            #self.Print()
-
             return intChannel_CC0pi.other
+        
 
 def create_ratio(h_in, h_tot):
     h_ratio = h_in.Clone(h_in.GetName() + "_ratio")

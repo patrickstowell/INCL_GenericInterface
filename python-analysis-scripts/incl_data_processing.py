@@ -12,6 +12,9 @@ ROOT.gSystem.Load("libNEUTOutput.so")
 ROOT.gSystem.Load("libNEUTReWeight.so")
 ROOT.TH1.AddDirectory(False)
 
+import ROOT
+import numpy as np
+
 
 def reader(filename):
     
@@ -186,15 +189,16 @@ def missing_E_2p2h(filename):
         nvect = event.vectorbranch
         nvect_class = nvect_reader(nvect)
         missing_E2p2h.append(nvect_class.missing_energy_2p2h())
-        excitation_E.append(nvect_class.excitationE_2p2h())
+        excitation_E.append(nvect_class.excitation_E_2p2h())
+        print(nvect_class.excitation_E_2p2h())
 
     file = ROOT.TFile("missing_E_2p2h_{}.root".format(filename_chunk),"RECREATE")
-    hist = ROOT.TH1D("h_missing_E2p2h", "Missing Energy 2p2h;Missing E [MeV];Counts", 100, -200, 200)
+    hist = ROOT.TH1D("h_missing_E2p2h", "Missing Energy 2p2h;Missing E [MeV];Counts", 100, 0, 100)
 
     for value in missing_E2p2h:
         hist.Fill(value)
 
-    hist2 = ROOT.TH1D("h_excitation_E2p2h", "Excitation E 2p2h; Excitation E [MeV];Counts", 100, -200, 200)
+    hist2 = ROOT.TH1D("h_excitation_E2p2h", "Excitation E 2p2h; Excitation E [MeV];Counts", 100, -10, 100)
     for value in excitation_E:
         hist2.Fill(value)
 
@@ -212,13 +216,9 @@ def main():
     parser.add_argument("-f", "--file",  nargs='+', help="file/s")
     args = parser.parse_args()
 
-
-
-    # Initialize input_path from args.input (which is already a list now)
     input_files = args.input if args.input else []
     additional_files = args.file if args.input else []
 
-    # 1. Log the inputs
     for file in input_files:
         print(f"Logic: Input file queued: '{file}'")
     if additional_files:
@@ -253,12 +253,19 @@ def main():
         elif function_to_run == "processing":
             for file in input_files:
                 INCL_processing(file)
+
         elif function_to_run == "2p2h":
             for file in input_files:
                 missing_E_2p2h(file)
-        
+        elif function_to_run == "transparency":
+            for file in input_files:
+                transparency(file, additional_files)
 
-                
+
+        elif function_to_run == "CCQE_comps":
+            for file in input_files:
+                ccqe_combined_plots(file,additional_files)
+
         else:
             print(f"Error: '{function_to_run}' is not a recognized option.")
 
