@@ -4,13 +4,12 @@ number_of_events = 100 # the number of probe interactions to simulate
 
 verbosity = "very_quiet"
 
-rng_seed = "file"
+rng_seed = "file" #Reads random number from a file so all events are the same 
 
 output_format = "neutroot"
 # output_format = "NuHepMC"
 
 simulation_mode = "neutrino" # This option includes electron scattering
-#simulation_mode = "others"
 
 [neut.vertex]
 
@@ -26,9 +25,8 @@ throwinke = "false"
 direction_type = "fixed" # probe approaches target along vector specified by direction
 direction = [0.0, 0.0,1.0] # same as "z"
 
-
 energy_spectrum_type = "root"
-energy_histogram = [ "/software/t2kflux_2016_plus250kA.root", "enu_nd280_numu", "gev"]
+energy_histogram = [ "/<path_to_directory>/t2kflux_2016_plus250kA.root", "enu_nd280_numu", "gev"]
 
 #energy_spectrum_type = "fixed"
 #energy_mev = 235.5
@@ -54,22 +52,23 @@ model =  "incl" # options are "none",""default", "incl-hybrid" (which runs incl 
 #if running with default, nucleon_cascade and pion_cascade parameters are used from the default card file.
 # if running with INCL, INCL parameters (to be implemented) will be used.
 # if running with hybrid, all parameters will be used based off CCQE interaction model. 
+
 deexcitation = "abla"
 
-[neut.target.hadron_FSI.nucleon_cascade]
+[neut.target.hadron_FSI.nucleon_cascade] # this is only for classic NEUT cascade
 
 nucleon_rescattering = "on"
 
-
-[neut.target.hadron_FSI.pion_cascade]
+[neut.target.hadron_FSI.pion_cascade] # this is only for classic NEUT cascade
 
 pion_rescattering = "on"
+
 
 [neut.interaction_model]
 
 mode_choice_type = "rescaled" 
 
-[neut.interaction_model.mode_rescaling]
+[neut.interaction_model.mode_rescaling] # turn these on as and when new channels are needed
 
 "CC_QE_nu" = 1.0
 "CC_2p2h_nu" = 0.0
@@ -175,7 +174,7 @@ potential = "edrmf"
 # will be an SRC event and produce an extra nucleon.
 src_Emiss_cut = 80
 
-[neut.interaction_model.QE.rome]
+[neut.interaction_model.QE.rome] # this is the setting that should be used
 
 # Shift SF inputs along the separation energy axis
 separation_energy_shift_gev = 0
@@ -184,15 +183,18 @@ separation_energy_shift_gev = 0
 separation_energy_negative_behavior = "pin_to_0"
 # separation_energy_negative_behavior = "redraw_from_sf"
 
-maximum_energy = 100000000000000
-maximum_momentum = 30000000000000000
+maximum_energy = 100
+maximum_momentum = 300
 
 strange_axial_coupling = 0.0
 
+#disable if you want the old spectral function
 sf_C12_table="2024"
 sf_neutron_energy_core="on"
 
 NN_pair_fraction = 0.05
+
+#this sets src boundary to a realistic cutoff shape, with a isospin dependent jailing cut
 src_model_type = "nuwro"
 src_kinematic_threshold = -1.0
 
@@ -237,7 +239,7 @@ nc_axial_mass = 1.21
 #model = "nieves_table"
 model = "nieves_hadron_tensor"
 
-#qval = "zero"
+#rdependent is needed to be on if you want realistic 2p2h stuff
 qval = "zero" #"r-dependent"
 
 use3p3h = false
