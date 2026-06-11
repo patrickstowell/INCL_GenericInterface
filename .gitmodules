@@ -10,3 +10,8 @@
 	path = nuwro-generic-interface
 	url = git@github.com:NuWro/nuwro.git
 	branch = master
+
+[submodule "INCL_python_analysis"]
+	path = INCL_python_analysis
+	url = git@github.com:tpeacock123/INCL_python_analysis.git
+	branch = main
