@@ -6,6 +6,8 @@ neut_merge_test
 ./Pre*
 ./pre*
 *.root
+*.ipynb
+*.xml
 *.png
 *.pdf
 *.pyc
