@@ -1,6 +1,6 @@
 [neut]
 
-number_of_events = 100 # the number of probe interactions to simulate
+number_of_events = 500000 # the number of probe interactions to simulate
 
 verbosity = "very_quiet"
 
@@ -26,10 +26,11 @@ direction_type = "fixed" # probe approaches target along vector specified by dir
 direction = [0.0, 0.0,1.0] # same as "z"
 
 energy_spectrum_type = "root"
-energy_histogram = [ "/<path_to_directory>/t2kflux_2016_plus250kA.root", "enu_nd280_numu", "gev"]
+energy_histogram = [ "/software/t2kflux_2016_plus250kA.root", "enu_nd280_numu", "gev"]
+
 
 #energy_spectrum_type = "fixed"
-#energy_mev = 235.5
+#energy_mev = 750.0
 
 [neut.target]
 
@@ -38,6 +39,13 @@ num_bound_protons = 6
 num_free_protons = 0
 
 [neut.target.nuclear_effects]
+
+spp_sis_dis_nucmod = "lfg"
+
+#spp_sf = "on"
+#spp_sis_dis_nucmod = "rfg"
+spp_binding_energy = "off"
+# turn on/off binding energ
 
 fermi_motion = "on"
 pauli_blocking = "on"
@@ -48,21 +56,12 @@ formation_zone_scat_parameter = 0.08
 
 [neut.target.hadron_FSI]
 
-model =  "incl" # options are "none",""default", "incl-hybrid" (which runs incl when compatible, and standard if not) and "incl"
+cascade_model =  "none" # options are "none",""default", "incl-hybrid" (which runs incl when compatible, and standard if not) and "incl"
 #if running with default, nucleon_cascade and pion_cascade parameters are used from the default card file.
 # if running with INCL, INCL parameters (to be implemented) will be used.
 # if running with hybrid, all parameters will be used based off CCQE interaction model. 
 
-deexcitation = "abla"
-
-[neut.target.hadron_FSI.nucleon_cascade] # this is only for classic NEUT cascade
-
-nucleon_rescattering = "on"
-
-[neut.target.hadron_FSI.pion_cascade] # this is only for classic NEUT cascade
-
-pion_rescattering = "on"
-
+deexcitation = "off"
 
 [neut.interaction_model]
 
@@ -149,11 +148,15 @@ q3_dependent_eb = { enabled = "off", gradient = 0, intercept = 0 }
 
 [neut.interaction_model.QE]
 
-#model = "nieves" # use SF model by ueno-mori for NC (unrecommend)
-#model = "nieves_furmanski_abe" # use SF model by frumanski-abe for NC
-model = "rome" # Benhar SF
-#model = "llewelyn-smith"
+model = "nieves" # use SF model by ueno-mori for NC (unrecommend)
+#model = "rome" # Benhar SF
 #model = "rmf"
+
+src_model_type = "box"
+src_kinematic_threshold = 0.0
+
+src_maximum_energy = 100
+src_maximum_momentum = 300
 
 #erpa = "on" # incompatible with model = "nieves", use nieves.rpa = "on" instead
 
@@ -181,10 +184,8 @@ separation_energy_shift_gev = 0
 
 # Behavior if chosen separation energy for event is unphysical
 separation_energy_negative_behavior = "pin_to_0"
-# separation_energy_negative_behavior = "redraw_from_sf"
 
-maximum_energy = 100
-maximum_momentum = 300
+#this sets src boundary to a realistic cutoff shape, with a isospin dependent jailing cut
 
 strange_axial_coupling = 0.0
 
@@ -193,11 +194,6 @@ sf_C12_table="2024"
 sf_neutron_energy_core="on"
 
 NN_pair_fraction = 0.05
-
-#this sets src boundary to a realistic cutoff shape, with a isospin dependent jailing cut
-src_model_type = "nuwro"
-src_kinematic_threshold = -1.0
-
 
 [neut.interaction_model.QE.nieves]
 
@@ -216,8 +212,8 @@ rpa_parameters.xmpi = 139.57
 rpa_parameters.xmrho = 775.4
 rpa_parameters.irel = 1.0
 
-binding_energy = "off"
-binding_energy_shift = "off"
+binding_energy = "on"
+binding_energy_shift = "on"
 
 [neut.interaction_model.QE.vector_form_factors]
 
@@ -231,7 +227,7 @@ form = "dipole"
 
 [neut.interaction_model.QE.axial_form_factors.dipole]
 
-axial_mass = 1.03
+axial_mass = 1.21
 nc_axial_mass = 1.21
 
 [neut.interaction_model.2p2h]
@@ -240,6 +236,61 @@ nc_axial_mass = 1.21
 model = "nieves_hadron_tensor"
 
 #rdependent is needed to be on if you want realistic 2p2h stuff
-qval = "zero" #"r-dependent"
+#qval = "r-dependent"
+qval= "zero"
 
 use3p3h = false
+
+# Resonant pion production model
+[neut.interaction_model.ResPP]
+
+#model = "rein_sehgal"
+#model = "kabirnezhad"
+model = "dcc"
+
+[neut.interaction_model.ResPP.rein_sehgal]
+
+# form_factors = "originalFF"
+form_factors = "graczyk_sobczyk"
+
+# How the form factors evolve with the number of oscillator quanta in the resonant state
+# Best described in Rein 1987, equation 3 and 4
+# See eq 3.12 of Rein-Sehgal 1981 and comments at end of page 95
+# "Ad hoc factor introduced in order to remedy certain unphysical aspects of the model associated with the existence of time-like excitations" in the FKR model
+# Also see Ravndal 1973, equation 5.1
+originalFF.nr_type = "original"
+# originalFF.nr_type = "halved"
+
+axial_mass_res_non_pi = 1.21
+# Value of axial mass
+axial_mass = 0.95
+# Value of vector mass
+vector_mass = 0.84
+# Normalisation of CA5(Q^2=0) form factor in Graczyk-Sobczyk FF
+ca5 = 1.01
+# Scaling of non-resonant background in Rein-Sehgal model
+nonresonant_background_scale = 1.3
+
+# Method for producing the pi+nucleon system from the decay of the resonant state
+# See Rein-Sehgal section 2.3 and the excellent appendix
+# Isotropic emits isotropically in resonance rest frame
+# Delta uses the Delta resonance only
+# "all_resonances" uses the three lowest resonances (See Rein-Sehgal 1981 section 2.3)
+# "delta_plus_isotropic" does an accept-reject on the size of the xsec vs the size of the xsec of the Delta resonance only: if the cross section was Delta dominated, use the Delta, if it was not use an isotropic distribution
+[neut.interaction_model.ResPP.rein_sehgal.ejection]
+
+# model options:
+# model="isotropic"
+# model="delta_only"
+# model="all_resonances"
+model = "delta_plus_isotropic"
+
+# Multipliers for the matrix elements in the FKR model, used ONLY to calculate the resonance -> pi+nucleon state. These are *NOT* used for the cross section calculation, only for the decay process
+rop3p3_mult = 1
+rom3m3_mult = 1
+rop1p1_mult = 1
+rom1m1_mult = 1
+rop3p1_mult = 1
+rom1m3_mult = 1
+rop3m1_mult = 1
+rop1m3_mult = 1

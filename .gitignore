@@ -1,6 +1,12 @@
 incl-build
 neut-build
 neut_merge_test
+neut-develop-test
+neut_output_files
+ana_*
+.vscode
+neut_output_files
+presentation_plots
 .ipynb_checkpoints
 *.txt
 ./Pre*
